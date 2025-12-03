@@ -9,13 +9,198 @@
 ```{r setup, include=FALSE}
 # Set your working directory
 
+
 # Load your packages
-library(tidyverse); library(here)
+library(tidyverse); library(here); library(cowplot)
 
 # Set your ggplot theme
 
 # Load your datasets
-WQ_data <- read.csv(here("./Raw_Data/WQ_data.txt"), header = TRUE, sep = "|")
+WQ_data_raw <- read.csv(here("./Raw_Data/WQ_data.txt"), header = TRUE, sep = "|",
+                        colClasses = c("ActivityType"="factor", 
+                                       "LocationID"="factor",
+                                       "ProgramLocationID"="factor",
+                                       "Year"="factor",
+                                       "Month"="factor",
+                                       "ParameterName"="factor",
+                                       "Year"="factor",
+                                       "Month"="factor"))
+
+#Insert underscores into parameter names
+levels(WQ_data_raw$ParameterName) <- c("Dissolved_O2", "NO2_NO3_Filtered", "pH", 
+                                    "Salinity", "Specific_Conductivity", 
+                                    "Total_Kjeldahl_Nitrogen", "Total_Nitrogen",
+                                    "Total_Phosphorous", "Turbidity", 
+                                    "Water_Temperature")
+
+#create wrangled data frames
+
+#pivoted parameters
+WQ_parameters_raw <- WQ_data_raw %>%
+  #select  columns of interest (we can add more later)
+  select(SampleDate, ParameterName, ResultValue, Year, Month, RowID) %>%
+  #move parameters of interest into their own columns
+  pivot_wider(names_from = ParameterName, values_from = ResultValue) %>%
+  mutate(SampleDate = ymd_hms(SampleDate),
+         Day = day(SampleDate))
+
+#monthly averages data frame (for time series)
+WQ_monthly_data <- WQ_parameters_raw %>%
+  group_by(Year, Month) %>%
+  summarise(
+    Mean_Phosphorous = mean(Total_Phosphorous, na.rm=TRUE),
+    Mean_NO2_NO3 = mean(NO2_NO3_Filtered, na.rm=TRUE),
+    Mean_Turbidity = mean(Turbidity, na.rm=TRUE),
+    Mean_Salinity = mean(Salinity, na.rm=TRUE),
+    Mean_Water_Temp = mean(Water_Temperature, na.rm=TRUE),
+    Mean_Kjeldahl_Nitrogen = mean(Total_Kjeldahl_Nitrogen, na.rm=TRUE),
+    Mean_Specific_Conduc = mean(Specific_Conductivity, na.rm=TRUE),
+    Mean_pH = mean(pH, na.rm=TRUE),
+    Mean_Dissolved_O2 = mean(Dissolved_O2, na.rm=TRUE),
+    Mean_Total_N = mean(Total_Nitrogen, na.rm=TRUE)) %>%
+  mutate(Date = ym(paste0(Year,"-",Month)))
+
+#Find missing observations (we will need this if we interpolate)
+dates_by_month <- as.data.frame(seq.Date(from=as.Date("2016/08/01"),
+                                      to=as.Date("2024/12/01"),
+                                      by="month"))
+colnames(dates_by_month) <- "Date"
+
+WQ_monthly_complete <- left_join(dates_by_month, WQ_monthly_data)
+
+
+
+#split data into pre- and post-ordinance data frames
+pre_ordinance_data <- WQ_monthly_complete %>%
+  filter(Date < as.Date("2021-04-01"))
+  
+post_ordinance_data <- WQ_monthly_complete %>%
+  filter(Date >= as.Date("2021-04-01"))
+
+
+
+#Preview of trends over time...just exploring
+#Note the missing data
+#Vertical line represents Miami-Date County summer fertilizer ordinance
+
+#monthly data
+#phosphorous
+ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Phosphorous)) +
+  geom_line() +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+
+#nitrogen
+ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Total_N)) +
+  geom_line() +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+
+#nitrates & nitrites
+ggplot(WQ_monthly_data, aes(x=Date, y=Mean_NO2_NO3)) +
+  geom_line() +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+
+#dissolved oxygen
+ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Dissolved_O2)) +
+  geom_line() +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+
+#pH
+ggplot(WQ_monthly_data, aes(x=Date, y=Mean_pH)) +
+  geom_line() +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+
+#salinity
+ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Salinity)) +
+  geom_line() +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+
+
+
+
+#previewing pre- & post-ordinance trends
+
+#phosphorous
+P_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_Phosphorous)) +
+  geom_line() +
+  geom_smooth(method = "lm")
+
+P_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_Phosphorous)) +
+  geom_line() +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+
+plot_grid(P_pre_plot, P_post_plot, ncol = 2)
+
+
+#nitrogen
+N_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_Total_N)) +
+  geom_line() +
+  geom_smooth(method = "lm")
+
+N_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_Total_N)) +
+  geom_line() +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+
+plot_grid(N_pre_plot, N_post_plot, ncol = 2)
+
+
+#nitrates & nitrites
+NO2NO3_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_NO2_NO3)) +
+  geom_line() +
+  geom_smooth(method = "lm")
+
+NO2NO3_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_NO2_NO3)) +
+  geom_line() +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+
+plot_grid(NO2NO3_pre_plot, NO2NO3_post_plot, ncol = 2)
+
+
+#dissolved oxygen
+O_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_Dissolved_O2)) +
+  geom_line() +
+  geom_smooth(method = "lm")
+
+O_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_Dissolved_O2)) +
+  geom_line() +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+
+plot_grid(O_pre_plot, O_post_plot, ncol = 2)
+
+
+#pH
+pH_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_pH)) +
+  geom_line() +
+  geom_smooth(method = "lm")
+
+pH_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_pH)) +
+  geom_line() +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+
+plot_grid(pH_pre_plot, pH_post_plot, ncol = 2)
+
+
+#salinity
+Sal_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_Salinity)) +
+  geom_line() +
+  geom_smooth(method = "lm")
+
+Sal_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_Salinity)) +
+  geom_line() +
+  geom_smooth(method = "lm") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+
+plot_grid(Sal_pre_plot, Sal_post_plot, ncol = 2)
                       
 ```
 
