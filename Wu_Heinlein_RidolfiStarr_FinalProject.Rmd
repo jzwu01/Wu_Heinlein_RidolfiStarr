@@ -204,6 +204,29 @@ plot_grid(Sal_pre_plot, Sal_post_plot, ncol = 2)
                       
 ```
 
+```{summer readings for anova}
+summer_readings <- WQ_parameters_raw %>%
+  #filter for May 15 - Oct 31 (per ordinance)
+  filter((Month==5 & Day>=15) | Month %in% c(6:10)) %>%
+  #some days have multiple measurements ... turn them into daily means
+  mutate(Day = day(SampleDate)) %>%
+  group_by(Year, Month, Day) %>%
+  summarise(
+    Daily_Phosphorous = mean(Total_Phosphorous, na.rm=TRUE),
+    Daily_NO2_NO3 = mean(NO2_NO3_Filtered, na.rm=TRUE),
+    Daily_Turbidity = mean(Turbidity, na.rm=TRUE),
+    Daily_Salinity = mean(Salinity, na.rm=TRUE),
+    Daily_Water_Temp = mean(Water_Temperature, na.rm=TRUE),
+    Daily_Kjeldahl_Nitrogen = mean(Total_Kjeldahl_Nitrogen, na.rm=TRUE),
+    Daily_Specific_Conduc = mean(Specific_Conductivity, na.rm=TRUE),
+    Daily_pH = mean(pH, na.rm=TRUE),
+    Daily_Dissolved_O2 = mean(Dissolved_O2, na.rm=TRUE),
+    Daily_Total_N = mean(Total_Nitrogen, na.rm=TRUE)) %>%
+  #make pre-ordinance and post-ordinance groups
+  mutate(Group = ifelse(as.numeric(paste(Year)) <= 2020, "Pre", "Post"))
+
+```
+
 
 # Rationale and Research Questions
 
