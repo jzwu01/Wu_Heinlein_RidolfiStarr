@@ -7,13 +7,24 @@
 \newpage
 
 ```{r setup, include=FALSE}
-# Set your working directory
-
 
 # Load your packages
-library(tidyverse); library(here); library(cowplot)
+library(tidyverse) 
+library(here) 
+library(cowplot)
+library(lubridate) 
+library(zoo)
+library(trend)
+
+# Set your working directory
+here()
 
 # Set your ggplot theme
+mytheme <- theme_classic(base_size = 13) +
+  theme(axis.text = element_text(color = "black"),
+        plot.background = element_rect(fill = "white", color = NA),
+        legend.position = "right")
+theme_set(mytheme)
 
 # Load your datasets
 WQ_data_raw <- read.csv(here("./Raw_Data/WQ_data.txt"), header = TRUE, sep = "|",
