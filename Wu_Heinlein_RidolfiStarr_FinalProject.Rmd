@@ -101,7 +101,7 @@ post_ordinance_data <- WQ_monthly_complete %>%
 
 #monthly data
 #phosphorous
-phosphorous.plot <- ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Phosphorous)) +
+phosphorous.plot <- ggplot(WQ_monthly_complete, aes(x=Date, y=Mean_Phosphorous)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
@@ -109,35 +109,35 @@ print(phosphorous.plot)
 
 
 #nitrogen
-nitrogen.plot <- ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Total_N)) +
+nitrogen.plot <- ggplot(WQ_monthly_complete, aes(x=Date, y=Mean_Total_N)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 nitrogen.plot
 
 #nitrates & nitrites
-nitrates.nitrites.plot <- ggplot(WQ_monthly_data, aes(x=Date, y=Mean_NO2_NO3)) +
+nitrates.nitrites.plot <- ggplot(WQ_monthly_complete, aes(x=Date, y=Mean_NO2_NO3)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 nitrates.nitrites.plot
 
 #dissolved oxygen
-oxygen.plot <- ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Dissolved_O2)) +
+oxygen.plot <- ggplot(WQ_monthly_complete, aes(x=Date, y=Mean_Dissolved_O2)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 oxygen.plot
 
 #pH
-ph.plot <- ggplot(WQ_monthly_data, aes(x=Date, y=Mean_pH)) +
+ph.plot <- ggplot(WQ_monthly_complete, aes(x=Date, y=Mean_pH)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 ph.plot
 
 #salinity
-salinity.plot <- ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Salinity)) +
+salinity.plot <- ggplot(WQ_monthly_complete, aes(x=Date, y=Mean_Salinity)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
@@ -257,7 +257,6 @@ summer_readings <- WQ_parameters_raw %>%
     Daily_Total_N = mean(Total_Nitrogen, na.rm=TRUE)) %>%
   #make pre-ordinance and post-ordinance groups
   mutate(Group = ifelse(as.numeric(paste(Year)) <= 2020, "Pre", "Post"))
-
 ```
 
 
