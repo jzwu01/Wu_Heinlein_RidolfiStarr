@@ -85,6 +85,22 @@ colnames(dates_by_month) <- "Date"
 WQ_monthly_complete <- left_join(dates_by_month, WQ_monthly_data)
 
 
+#interpolate monthly data
+WQ_monthly_complete <- WQ_monthly_complete %>%
+  mutate(
+    Interp_Phosphorous = na.approx(Mean_Phosphorous),
+    Interp_NO2_NO3 = na.approx(Mean_NO2_NO3),
+    Interp_Turbidity = na.approx(Mean_Turbidity),
+    Interp_Salinity = na.approx(Mean_Salinity),
+    Interp_Water_Temp = na.approx(Mean_Water_Temp),
+    Interp_Kjeldahl_Nitrogen = na.approx(Mean_Kjeldahl_Nitrogen),
+    Interp_Specific_Conduc = na.approx(Mean_Specific_Conduc),
+    Interp_pH = na.approx(Mean_pH),
+    Interp_Dissolved_O2 = na.approx(Mean_Dissolved_O2),
+    Interp_Total_N = na.approx(Mean_Total_N))
+
+
+
 
 #split data into pre- and post-ordinance data frames
 pre_ordinance_data <- WQ_monthly_complete %>%
@@ -101,45 +117,50 @@ post_ordinance_data <- WQ_monthly_complete %>%
 
 #monthly data
 #phosphorous
-phosphorous.plot <- ggplot(WQ_monthly_complete, aes(x=Date, y=Mean_Phosphorous)) +
-  geom_line() +
-  geom_smooth(method = "lm") +
+phosphorous.plot <- ggplot(WQ_monthly_complete) +
+  geom_line(aes(x=Date, y=Interp_Phosphorous), color="red") +
+  geom_line(aes(x=Date, y=Mean_Phosphorous)) +
+  geom_smooth(aes(x=Date, y=Interp_Phosphorous), method="lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 print(phosphorous.plot)
 
-
 #nitrogen
-nitrogen.plot <- ggplot(WQ_monthly_complete, aes(x=Date, y=Mean_Total_N)) +
-  geom_line() +
-  geom_smooth(method = "lm") +
+nitrogen.plot <- ggplot(WQ_monthly_complete) +
+  geom_line(aes(x=Date, y=Interp_Total_N), color="red") +
+  geom_line(aes(x=Date, y=Mean_Total_N)) +
+  geom_smooth(aes(x=Date, y=Interp_Total_N), method="lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 nitrogen.plot
 
 #nitrates & nitrites
-nitrates.nitrites.plot <- ggplot(WQ_monthly_complete, aes(x=Date, y=Mean_NO2_NO3)) +
-  geom_line() +
-  geom_smooth(method = "lm") +
+nitrates.nitrites.plot <- ggplot(WQ_monthly_complete) +
+  geom_line(aes(x=Date, y=Interp_NO2_NO3), color="red") +
+  geom_line(aes(x=Date, y=Mean_NO2_NO3)) +
+  geom_smooth(aes(x=Date, y=Interp_NO2_NO3), method="lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 nitrates.nitrites.plot
 
 #dissolved oxygen
-oxygen.plot <- ggplot(WQ_monthly_complete, aes(x=Date, y=Mean_Dissolved_O2)) +
-  geom_line() +
-  geom_smooth(method = "lm") +
+oxygen.plot <- ggplot(WQ_monthly_complete) +
+  geom_line(aes(x=Date, y=Interp_Dissolved_O2), color="red") +
+  geom_line(aes(x=Date, y=Mean_Dissolved_O2)) +
+  geom_smooth(aes(x=Date, y=Interp_Dissolved_O2), method="lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 oxygen.plot
 
 #pH
-ph.plot <- ggplot(WQ_monthly_complete, aes(x=Date, y=Mean_pH)) +
-  geom_line() +
-  geom_smooth(method = "lm") +
+ph.plot <- ggplot(WQ_monthly_complete) +
+  geom_line(aes(x=Date, y=Interp_pH), color="red") +
+  geom_line(aes(x=Date, y=Mean_pH)) +
+  geom_smooth(aes(x=Date, y=Interp_pH), method="lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 ph.plot
 
 #salinity
-salinity.plot <- ggplot(WQ_monthly_complete, aes(x=Date, y=Mean_Salinity)) +
-  geom_line() +
-  geom_smooth(method = "lm") +
+salinity.plot <- ggplot(WQ_monthly_complete) +
+  geom_line(aes(x=Date, y=Interp_Salinity), color="red") +
+  geom_line(aes(x=Date, y=Mean_Salinity)) +
+  geom_smooth(aes(x=Date, y=Interp_Salinity), method="lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 salinity.plot
 
@@ -147,14 +168,16 @@ salinity.plot
 #previewing pre- & post-ordinance trends
 
 #phosphorous
-P_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_Phosphorous)) +
-  geom_line() +
-  geom_smooth(method = "lm")
+P_pre_plot <- ggplot(pre_ordinance_data) +
+  geom_line(aes(x=Date, y=Interp_Phosphorous), color="red") +
+  geom_line(aes(x=Date, y=Mean_Phosphorous)) +
+  geom_smooth(aes(x=Date, y=Interp_Phosphorous), method="lm")
 P_pre_plot
 
-P_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_Phosphorous)) +
-  geom_line() +
-  geom_smooth(method = "lm") +
+P_post_plot <- ggplot(post_ordinance_data) +
+  geom_line(aes(x=Date, y=Interp_Phosphorous), color="red") +
+  geom_line(aes(x=Date, y=Mean_Phosphorous)) +
+  geom_smooth(aes(x=Date, y=Interp_Phosphorous), method="lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 P_post_plot
 
@@ -162,14 +185,16 @@ plot_grid(P_pre_plot, P_post_plot, ncol = 2)
 
 
 #nitrogen
-N_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_Total_N)) +
-  geom_line() +
-  geom_smooth(method = "lm")
+N_pre_plot <- ggplot(pre_ordinance_data) +
+  geom_line(aes(x=Date, y=Interp_Total_N), color="red") +
+  geom_line(aes(x=Date, y=Mean_Total_N)) +
+  geom_smooth(aes(x=Date, y=Interp_Total_N), method="lm")
 N_pre_plot
 
-N_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_Total_N)) +
-  geom_line() +
-  geom_smooth(method = "lm") +
+N_post_plot <- ggplot(post_ordinance_data) +
+  geom_line(aes(x=Date, y=Interp_Total_N), color="red") +
+  geom_line(aes(x=Date, y=Mean_Total_N)) +
+  geom_smooth(aes(x=Date, y=Interp_Total_N), method="lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 N_post_plot
 
@@ -177,14 +202,16 @@ plot_grid(N_pre_plot, N_post_plot, ncol = 2)
 
 
 #nitrates & nitrites
-NO2NO3_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_NO2_NO3)) +
-  geom_line() +
-  geom_smooth(method = "lm")
+NO2NO3_pre_plot <- ggplot(pre_ordinance_data) +
+  geom_line(aes(x=Date, y=Interp_NO2_NO3), color="red") +
+  geom_line(aes(x=Date, y=Mean_NO2_NO3)) +
+  geom_smooth(aes(x=Date, y=Interp_NO2_NO3), method="lm")
 NO2NO3_pre_plot
 
-NO2NO3_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_NO2_NO3)) +
-  geom_line() +
-  geom_smooth(method = "lm") +
+NO2NO3_post_plot <- ggplot(post_ordinance_data) +
+  geom_line(aes(x=Date, y=Interp_NO2_NO3), color="red") +
+  geom_line(aes(x=Date, y=Mean_NO2_NO3)) +
+  geom_smooth(aes(x=Date, y=Interp_NO2_NO3), method="lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 NO2NO3_post_plot
 
@@ -192,14 +219,16 @@ plot_grid(NO2NO3_pre_plot, NO2NO3_post_plot, ncol = 2)
 
 
 #dissolved oxygen
-O_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_Dissolved_O2)) +
-  geom_line() +
-  geom_smooth(method = "lm")
+O_pre_plot <- ggplot(pre_ordinance_data) +
+  geom_line(aes(x=Date, y=Interp_Dissolved_O2), color="red") +
+  geom_line(aes(x=Date, y=Mean_Dissolved_O2)) +
+  geom_smooth(aes(x=Date, y=Interp_Dissolved_O2), method="lm")
 O_pre_plot
 
-O_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_Dissolved_O2)) +
-  geom_line() +
-  geom_smooth(method = "lm") +
+O_post_plot <- ggplot(post_ordinance_data) +
+geom_line(aes(x=Date, y=Interp_Dissolved_O2), color="red") +
+  geom_line(aes(x=Date, y=Mean_Dissolved_O2)) +
+  geom_smooth(aes(x=Date, y=Interp_Dissolved_O2), method="lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 O_post_plot
 
@@ -207,14 +236,16 @@ plot_grid(O_pre_plot, O_post_plot, ncol = 2)
 
 
 #pH
-pH_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_pH)) +
-  geom_line() +
-  geom_smooth(method = "lm")
+pH_pre_plot <- ggplot(pre_ordinance_data) +
+  geom_line(aes(x=Date, y=Interp_pH), color="red") +
+  geom_line(aes(x=Date, y=Mean_pH)) +
+  geom_smooth(aes(x=Date, y=Interp_pH), method="lm")
 pH_pre_plot
 
-pH_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_pH)) +
-  geom_line() +
-  geom_smooth(method = "lm") +
+pH_post_plot <- ggplot(post_ordinance_data) +
+geom_line(aes(x=Date, y=Interp_pH), color="red") +
+  geom_line(aes(x=Date, y=Mean_pH)) +
+  geom_smooth(aes(x=Date, y=Interp_pH), method="lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 pH_post_plot
 
@@ -222,23 +253,43 @@ plot_grid(pH_pre_plot, pH_post_plot, ncol = 2)
 
 
 #salinity
-Sal_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_Salinity)) +
-  geom_line() +
-  geom_smooth(method = "lm")
+Sal_pre_plot <- ggplot(pre_ordinance_data) +
+  geom_line(aes(x=Date, y=Interp_Salinity), color="red") +
+  geom_line(aes(x=Date, y=Mean_Salinity)) +
+  geom_smooth(aes(x=Date, y=Interp_Salinity), method="lm")
 Sal_pre_plot
 
-Sal_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_Salinity)) +
-  geom_line() +
-  geom_smooth(method = "lm") +
+Sal_post_plot <- ggplot(post_ordinance_data) +
+  geom_line(aes(x=Date, y=Interp_Salinity), color="red") +
+  geom_line(aes(x=Date, y=Mean_Salinity)) +
+  geom_smooth(aes(x=Date, y=Interp_Salinity), method="lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
 Sal_post_plot
 
 plot_grid(Sal_pre_plot, Sal_post_plot, ncol = 2)
                       
-```
 
-```{r setup, summer readings for anova}
-summer_readings <- WQ_parameters_raw %>%
+#yearly numbers
+
+#yearly averages for time series
+summer_readings_yearly <- WQ_parameters_raw %>%
+  filter((Month==5 & Day>=15) | Month %in% c(6:10)) %>%
+  group_by(Year) %>%
+  summarise(
+    Mean_Phosphorous = mean(Total_Phosphorous, na.rm=TRUE),
+    Mean_NO2_NO3 = mean(NO2_NO3_Filtered, na.rm=TRUE),
+    Mean_Turbidity = mean(Turbidity, na.rm=TRUE),
+    Mean_Salinity = mean(Salinity, na.rm=TRUE),
+    Mean_Water_Temp = mean(Water_Temperature, na.rm=TRUE),
+    Mean_Kjeldahl_Nitrogen = mean(Total_Kjeldahl_Nitrogen, na.rm=TRUE),
+    Mean_Specific_Conduc = mean(Specific_Conductivity, na.rm=TRUE),
+    Mean_pH = mean(pH, na.rm=TRUE),
+    Mean_Dissolved_O2 = mean(Dissolved_O2, na.rm=TRUE),
+    Mean_Total_N = mean(Total_Nitrogen, na.rm=TRUE)) %>%
+  mutate(Date = ym(paste0(Year,"-","01")))
+
+#daily readings for ANOVA
+summer_readings_daily <- WQ_parameters_raw %>%
   #filter for May 15 - Oct 31 (per ordinance)
   filter((Month==5 & Day>=15) | Month %in% c(6:10)) %>%
   #some days have multiple measurements ... turn them into daily means
@@ -257,6 +308,7 @@ summer_readings <- WQ_parameters_raw %>%
     Daily_Total_N = mean(Total_Nitrogen, na.rm=TRUE)) %>%
   #make pre-ordinance and post-ordinance groups
   mutate(Group = ifelse(as.numeric(paste(Year)) <= 2020, "Pre", "Post"))
+
 ```
 
 
