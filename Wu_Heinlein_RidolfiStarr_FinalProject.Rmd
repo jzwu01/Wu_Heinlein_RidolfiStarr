@@ -1,3 +1,8 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 \newpage
 \tableofcontents 
 \newpage
@@ -6,7 +11,7 @@
 \listoffigures 
 \newpage
 
-```{r setup, include=FALSE}
+```{r setup}
 
 # Load your packages
 library(tidyverse) 
@@ -96,42 +101,47 @@ post_ordinance_data <- WQ_monthly_complete %>%
 
 #monthly data
 #phosphorous
-ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Phosphorous)) +
+phosphorous.plot <- ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Phosphorous)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+print(phosphorous.plot)
+
 
 #nitrogen
-ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Total_N)) +
+nitrogen.plot <- ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Total_N)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+nitrogen.plot
 
 #nitrates & nitrites
-ggplot(WQ_monthly_data, aes(x=Date, y=Mean_NO2_NO3)) +
+nitrates.nitrites.plot <- ggplot(WQ_monthly_data, aes(x=Date, y=Mean_NO2_NO3)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+nitrates.nitrites.plot
 
 #dissolved oxygen
-ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Dissolved_O2)) +
+oxygen.plot <- ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Dissolved_O2)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+oxygen.plot
 
 #pH
-ggplot(WQ_monthly_data, aes(x=Date, y=Mean_pH)) +
+ph.plot <- ggplot(WQ_monthly_data, aes(x=Date, y=Mean_pH)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+ph.plot
 
 #salinity
-ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Salinity)) +
+salinity.plot <- ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Salinity)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
-
-
+salinity.plot
 
 
 #previewing pre- & post-ordinance trends
@@ -140,11 +150,13 @@ ggplot(WQ_monthly_data, aes(x=Date, y=Mean_Salinity)) +
 P_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_Phosphorous)) +
   geom_line() +
   geom_smooth(method = "lm")
+P_pre_plot
 
 P_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_Phosphorous)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+P_post_plot
 
 plot_grid(P_pre_plot, P_post_plot, ncol = 2)
 
@@ -153,11 +165,13 @@ plot_grid(P_pre_plot, P_post_plot, ncol = 2)
 N_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_Total_N)) +
   geom_line() +
   geom_smooth(method = "lm")
+N_pre_plot
 
 N_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_Total_N)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+N_post_plot
 
 plot_grid(N_pre_plot, N_post_plot, ncol = 2)
 
@@ -166,11 +180,13 @@ plot_grid(N_pre_plot, N_post_plot, ncol = 2)
 NO2NO3_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_NO2_NO3)) +
   geom_line() +
   geom_smooth(method = "lm")
+NO2NO3_pre_plot
 
 NO2NO3_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_NO2_NO3)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+NO2NO3_post_plot
 
 plot_grid(NO2NO3_pre_plot, NO2NO3_post_plot, ncol = 2)
 
@@ -179,11 +195,13 @@ plot_grid(NO2NO3_pre_plot, NO2NO3_post_plot, ncol = 2)
 O_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_Dissolved_O2)) +
   geom_line() +
   geom_smooth(method = "lm")
+O_pre_plot
 
 O_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_Dissolved_O2)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+O_post_plot
 
 plot_grid(O_pre_plot, O_post_plot, ncol = 2)
 
@@ -192,11 +210,13 @@ plot_grid(O_pre_plot, O_post_plot, ncol = 2)
 pH_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_pH)) +
   geom_line() +
   geom_smooth(method = "lm")
+pH_pre_plot
 
 pH_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_pH)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+pH_post_plot
 
 plot_grid(pH_pre_plot, pH_post_plot, ncol = 2)
 
@@ -205,17 +225,19 @@ plot_grid(pH_pre_plot, pH_post_plot, ncol = 2)
 Sal_pre_plot <- ggplot(pre_ordinance_data, aes(x=Date, y=Mean_Salinity)) +
   geom_line() +
   geom_smooth(method = "lm")
+Sal_pre_plot
 
 Sal_post_plot <- ggplot(post_ordinance_data, aes(x=Date, y=Mean_Salinity)) +
   geom_line() +
   geom_smooth(method = "lm") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
+Sal_post_plot
 
 plot_grid(Sal_pre_plot, Sal_post_plot, ncol = 2)
                       
 ```
 
-```{summer readings for anova}
+```{r setup, summer readings for anova}
 summer_readings <- WQ_parameters_raw %>%
   #filter for May 15 - Oct 31 (per ordinance)
   filter((Month==5 & Day>=15) | Month %in% c(6:10)) %>%
@@ -240,7 +262,12 @@ summer_readings <- WQ_parameters_raw %>%
 
 
 # Rationale and Research Questions
-
+This study takes examines how the Miami Beach fertilizer ordinance affect 
+the various parameters used to assess water quality. For context, the Miami 
+Beach fertilizer ordinance prohibits the use of fertilizers containing 
+nitrogen and phosphorus during the summer rainy season, and it was first 
+passed and enacted in January, 2021. The ordinance is effective from May 15 
+through October 31 every year. 
 
 
 \newpage
@@ -277,3 +304,4 @@ summer_readings <- WQ_parameters_raw %>%
 
 # References
 <add references here if relevant, otherwise delete this section> 
+https://data.florida-seacar.org/programs/details/4058 
