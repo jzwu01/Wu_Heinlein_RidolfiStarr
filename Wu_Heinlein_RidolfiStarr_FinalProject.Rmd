@@ -20,6 +20,8 @@ library(cowplot)
 library(lubridate) 
 library(zoo)
 library(trend)
+library(sf)
+library(mapview); mapviewOptions(fgb = FALSE) 
 
 # Set your working directory
 here()
@@ -256,6 +258,26 @@ through October 31 every year.
 
 # Exploratory Analysis 
 
+```{r}
+#Creating simple features data frame for spatial visualization 
+SampleLocations_sf <- WQ_data_raw %>%
+  distinct(ProgramLocationID,OriginalLongitude, OriginalLatitude, .keep_all = FALSE) %>%
+  st_as_sf(
+    coords = c("OriginalLongitude", "OriginalLatitude"),
+    crs= 4326)
+
+#Visualization of sample collection locations 
+mapviewOptions(basemaps = "Esri.WorldImagery")
+
+mapview(
+  SampleLocations_sf,
+  layer.name= "Sample Locations",
+  legend= FALSE,
+  col.regions="blue",
+  col="yellow",
+  alpa.regions= 0.5
+  )
+```
 
 
 \newpage
