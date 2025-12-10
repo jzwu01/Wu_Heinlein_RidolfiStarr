@@ -23,6 +23,8 @@ library(trend)
 library(sf)
 library(mapview); mapviewOptions(fgb = FALSE) 
 library(cowplot)
+library(agricolae)
+library(knitr)
 
 # Set your working directory
 here()
@@ -41,6 +43,25 @@ WQ_data_raw <- read.csv(here("./Raw_Data/WQ_data.txt"), header = TRUE, sep = "|"
                                        "Month"="factor",
                                        "ParameterName"="factor"))
 
+```
+
+
+# Rationale and Research Questions
+This study takes examines how the Miami Beach fertilizer ordinance affect 
+the various parameters used to assess water quality. For context, the Miami 
+Beach fertilizer ordinance prohibits the use of fertilizers containing 
+nitrogen and phosphorus during the summer rainy season, and it was first 
+passed and enacted in January, 2021. The ordinance is effective from May 15 
+through October 31 every year. 
+
+
+\newpage
+
+# Dataset Information
+
+```{r}
+#wrangling
+
 #Insert underscores into parameter names
 levels(WQ_data_raw$ParameterName) <- c("Dissolved_O2", "NO2_NO3_Filtered", "pH", 
                                     "Salinity", "Specific_Conductivity", 
@@ -48,9 +69,7 @@ levels(WQ_data_raw$ParameterName) <- c("Dissolved_O2", "NO2_NO3_Filtered", "pH",
                                     "Total_Phosphorous", "Turbidity", 
                                     "Water_Temperature")
 
-#create wrangled data frames
-
-#pivoted parameters
+#pivot parameteres
 WQ_parameters_raw <- WQ_data_raw %>%
   #select  columns of interest (we can add more later)
   select(SampleDate, ParameterName, ResultValue, Year, Month, ProgramLocationID,
@@ -64,6 +83,7 @@ WQ_parameters_raw <- WQ_data_raw %>%
   mutate(SampleDate = ymd_hms(SampleDate),
          Group = ifelse(SampleDate < as.Date("2021-04-1"), "Pre", "Post"))
 
+
 #monthly averages data frame (for time series)
 WQ_monthly_data <- WQ_parameters_raw %>%
   group_by(Year, Month, Group) %>%
@@ -74,13 +94,14 @@ WQ_monthly_data <- WQ_parameters_raw %>%
     Mean_Total_N = mean(Total_Nitrogen, na.rm=TRUE)) %>%
   mutate(Date = ym(paste0(Year,"-",Month)))
 
+
 #Find missing observations (needed for interpolation)
 dates_by_month <- as.data.frame(seq.Date(from=as.Date("2016/08/01"),
                                       to=as.Date("2024/12/01"),
                                       by="month"))
 colnames(dates_by_month) <- "Date"
-
 WQ_monthly_complete <- left_join(dates_by_month, WQ_monthly_data)
+
 
 #interpolate monthly data
 WQ_monthly_complete <- WQ_monthly_complete %>%
@@ -92,9 +113,7 @@ WQ_monthly_complete <- WQ_monthly_complete %>%
     Group = ifelse(Date < as.Date("2021-04-01"), "Pre", "Post"))
 
 
-
 #yearly numbers
-
 yearly_averages <- WQ_parameters_raw %>%
   group_by(Year, Group) %>%
   summarise(
@@ -128,132 +147,45 @@ post_ordinance_yearly <- yearly_averages %>%
   filter(Group == "Post")
 
 
-#Preview of trends over time...just exploring
-#Note the missing data
-#Vertical line represents Miami-Date County summer fertilizer ordinance
+#parameter summary table
+Minima <- c(
+  min(WQ_parameters_raw$Total_Phosphorous, na.rm=TRUE),
+  min(WQ_parameters_raw$Total_Nitrogen, na.rm=TRUE),
+  min(WQ_parameters_raw$Dissolved_O2, na.rm=TRUE),
+  min(WQ_parameters_raw$pH, na.rm=TRUE))
 
-#monthly data
-#phosphorous
-phosphorous.plot <- ggplot(WQ_monthly_complete) +
-  geom_line(aes(x=Date, y=Interp_Phosphorous), color="red") +
-  geom_line(aes(x=Date, y=Mean_Phosphorous)) +
-  geom_smooth(aes(x=Date, y=Interp_Phosphorous), method="lm") +
-  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
-print(phosphorous.plot)
+Maxima <- c(
+  max(WQ_parameters_raw$Total_Phosphorous, na.rm=TRUE),
+  max(WQ_parameters_raw$Total_Nitrogen, na.rm=TRUE),
+  max(WQ_parameters_raw$Dissolved_O2, na.rm=TRUE),
+  max(WQ_parameters_raw$pH, na.rm=TRUE))
 
+Means <- c(
+  mean(WQ_parameters_raw$Total_Phosphorous, na.rm=TRUE),
+  mean(WQ_parameters_raw$Total_Nitrogen, na.rm=TRUE),
+  mean(WQ_parameters_raw$Dissolved_O2, na.rm=TRUE),
+  mean(WQ_parameters_raw$pH, na.rm=TRUE))
 
-#nitrogen
-nitrogen.plot <- ggplot(WQ_monthly_complete) +
-  geom_line(aes(x=Date, y=Interp_Total_N), color="red") +
-  geom_line(aes(x=Date, y=Mean_Total_N)) +
-  geom_smooth(aes(x=Date, y=Interp_Total_N), method="lm") +
-  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
-nitrogen.plot
+SDs <- c(
+  sd(WQ_parameters_raw$Total_Phosphorous, na.rm=TRUE),
+  sd(WQ_parameters_raw$Total_Nitrogen, na.rm=TRUE),
+  sd(WQ_parameters_raw$Dissolved_O2, na.rm=TRUE),
+  sd(WQ_parameters_raw$pH, na.rm=TRUE))
 
+parameter.summary <- data.frame(
+  "Parameter" = c("Total Phosphorous", "Total Nitrogen", "Dissolved Oxygen", "pH"),
+  "Units" = c("mg/L", "mg/L", "mg/L", "NA"),
+  "Minimum" = Minima,
+  "Maximum" = Maxima,
+  "Mean" = Means,
+  "Std_Deviation" = SDs)
 
-#dissolved oxygen
-oxygen.plot <- ggplot(WQ_monthly_complete) +
-  geom_line(aes(x=Date, y=Interp_Dissolved_O2), color="red") +
-  geom_line(aes(x=Date, y=Mean_Dissolved_O2)) +
-  geom_smooth(aes(x=Date, y=Interp_Dissolved_O2), method="lm") +
-  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
-oxygen.plot
-
-#pH
-ph.plot <- ggplot(WQ_monthly_complete) +
-  geom_line(aes(x=Date, y=Interp_pH), color="red") +
-  geom_line(aes(x=Date, y=Mean_pH)) +
-  geom_smooth(aes(x=Date, y=Interp_pH), method="lm") +
-  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
-ph.plot
-
-
-
-#previewing pre- & post-ordinance trends
-
-#phosphorous
-P_pre_plot <- ggplot(pre_ordinance_monthly) +
-  geom_line(aes(x=Date, y=Interp_Phosphorous), color="red") +
-  geom_line(aes(x=Date, y=Mean_Phosphorous)) +
-  geom_smooth(aes(x=Date, y=Interp_Phosphorous), method="lm")
-P_pre_plot
-
-P_post_plot <- ggplot(post_ordinance_monthly) +
-  geom_line(aes(x=Date, y=Interp_Phosphorous), color="red") +
-  geom_line(aes(x=Date, y=Mean_Phosphorous)) +
-  geom_smooth(aes(x=Date, y=Interp_Phosphorous), method="lm") +
-  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
-P_post_plot
-
-plot_grid(P_pre_plot, P_post_plot, ncol = 2)
-
-
-#nitrogen
-N_pre_plot <- ggplot(pre_ordinance_monthly) +
-  geom_line(aes(x=Date, y=Interp_Total_N), color="red") +
-  geom_line(aes(x=Date, y=Mean_Total_N)) +
-  geom_smooth(aes(x=Date, y=Interp_Total_N), method="lm")
-N_pre_plot
-
-N_post_plot <- ggplot(post_ordinance_monthly) +
-  geom_line(aes(x=Date, y=Interp_Total_N), color="red") +
-  geom_line(aes(x=Date, y=Mean_Total_N)) +
-  geom_smooth(aes(x=Date, y=Interp_Total_N), method="lm") +
-  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
-N_post_plot
-
-plot_grid(N_pre_plot, N_post_plot, ncol = 2)
-
-
-#dissolved oxygen
-O_pre_plot <- ggplot(pre_ordinance_monthly) +
-  geom_line(aes(x=Date, y=Interp_Dissolved_O2), color="red") +
-  geom_line(aes(x=Date, y=Mean_Dissolved_O2)) +
-  geom_smooth(aes(x=Date, y=Interp_Dissolved_O2), method="lm")
-O_pre_plot
-
-O_post_plot <- ggplot(post_ordinance_monthly) +
-geom_line(aes(x=Date, y=Interp_Dissolved_O2), color="red") +
-  geom_line(aes(x=Date, y=Mean_Dissolved_O2)) +
-  geom_smooth(aes(x=Date, y=Interp_Dissolved_O2), method="lm") +
-  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
-O_post_plot
-
-plot_grid(O_pre_plot, O_post_plot, ncol = 2)
-
-
-#pH
-pH_pre_plot <- ggplot(pre_ordinance_monthly) +
-  geom_line(aes(x=Date, y=Interp_pH), color="red") +
-  geom_line(aes(x=Date, y=Mean_pH)) +
-  geom_smooth(aes(x=Date, y=Interp_pH), method="lm")
-pH_pre_plot
-
-pH_post_plot <- ggplot(post_ordinance_monthly) +
-geom_line(aes(x=Date, y=Interp_pH), color="red") +
-  geom_line(aes(x=Date, y=Mean_pH)) +
-  geom_smooth(aes(x=Date, y=Interp_pH), method="lm") +
-  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2)
-pH_post_plot
-
-plot_grid(pH_pre_plot, pH_post_plot, ncol = 2)
+kable(
+  parameter.summary,
+  align = c("l","c","r","r","r","r"),
+  digits = c(1,1,5,4,2,2),
+  caption = "Parameter Summary Statistics")
 ```
-
-
-# Rationale and Research Questions
-This study takes examines how the Miami Beach fertilizer ordinance affect 
-the various parameters used to assess water quality. For context, the Miami 
-Beach fertilizer ordinance prohibits the use of fertilizers containing 
-nitrogen and phosphorus during the summer rainy season, and it was first 
-passed and enacted in January, 2021. The ordinance is effective from May 15 
-through October 31 every year. 
-
-
-\newpage
-
-# Dataset Information
-
-
 
 \newpage
 
@@ -280,6 +212,40 @@ mapview(
   )
 ```
 
+```{r}
+#Exploring series
+
+phosphorous.preview <- ggplot(WQ_monthly_complete) +
+  geom_line(aes(x=Date, y=Mean_Phosphorous)) +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  labs(
+    y="Dissolved Phosphorous (mg/L)",
+    x="")
+
+nitrogen.preview <- ggplot(WQ_monthly_complete) +
+  geom_line(aes(x=Date, y=Mean_Total_N)) +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  labs(
+    y="Total Nitrogen (mg/L)",
+    x="")
+
+oxygen.preview <- ggplot(WQ_monthly_complete) +
+  geom_line(aes(x=Date, y=Mean_Dissolved_O2)) +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  labs(
+    y="Dissolved Oxygen (mg/L)",
+    x="")
+
+pH.preview <- ggplot(WQ_monthly_complete) +
+  geom_line(aes(x=Date, y=Mean_pH)) +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  labs(
+    y="pH",
+    x="Date")
+
+plot_grid(phosphorous.preview, nitrogen.preview, oxygen.preview, pH.preview, nrow=4)
+
+```
 Exploratory box plots showing the distribution of parameters of interest by year
 individually and as a combined plot 
 ```{r}
@@ -343,7 +309,47 @@ print(CombinedDistributionPlot)
 
 # Analysis
 
+```{r}
+#time series
 
+#monthly
+
+monthly.P.ts <- ts(WQ_monthly_complete$Interp_Phosphorous, start=c(2016,8), 
+                   frequency=12)
+monthly.P.decomp <- stl(monthly.P.ts, s.window="periodic")
+plot(monthly.P.decomp)
+monthly.P.components <- as.data.frame(monthly.P.decomp$time.series[,1:3])
+monthly.P.components <- mutate(monthly.P.components,
+                               observed = WQ_monthly_complete$Interp_Phosphorous,
+                               date = WQ_monthly_complete$Date)
+
+monthly.N.ts <- ts(WQ_monthly_complete$Interp_Total_N, start=c(2016,8), 
+                   frequency=12)
+monthly.N.decomp <- stl(monthly.N.ts, s.window="periodic")
+plot(monthly.N.decomp)
+monthly.N.components <- as.data.frame(monthly.N.decomp$time.series[,1:3])
+monthly.N.components <- mutate(monthly.N.components,
+                               observed = WQ_monthly_complete$Interp_Total_N,
+                               date = WQ_monthly_complete$Date)
+
+```
+
+
+```{r}
+#ANOVA
+yearly.P.anova <- aov(data=WQ_monthly_complete, Mean_Phosphorous ~ Year)
+summary(yearly.P.anova)
+TukeyHSD(yearly.P.anova)
+P.HSD <- HSD.test(yearly.P.anova, "Year", group=TRUE)
+P.HSD
+
+yearly.N.anova <- aov(data=WQ_monthly_complete, Mean_Total_N ~ Year)
+summary(yearly.N.anova)
+TukeyHSD(yearly.N.anova)
+N.HSD <- HSD.test(yearly.N.anova, "Year", group=TRUE)
+N.HSD
+
+```
 
 ## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
 
