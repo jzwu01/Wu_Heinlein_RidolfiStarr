@@ -1,7 +1,12 @@
 ---
+title: "Trend Analysis of Water Quality Data in Biscayne Bay: Impacts of City of Miami Beach Fertilizer Ordinance"
+author: "Dashiell Ridolfi-Starr & Joy Wu & Jordan Heinlein"
+date: " Fall 2025"
+ 
 output: html_document
 editor_options: 
   chunk_output_type: console
+toc: true
 ---
 \newpage
 \tableofcontents 
@@ -293,7 +298,8 @@ Dissolved_O2_Distribution <- ggplot(WQ_monthly_complete,
   ylab("Dissolved O2 (mg/L)")+
   theme(axis.title.x = element_blank())+
   theme(axis.text.x = element_blank())+
-  theme(axis.ticks.x = element_blank())
+  theme(axis.ticks.x = element_blank())+
+  ylim(NA,60)
 print(Dissolved_O2_Distribution)
 
 pH_distribution <- ggplot(WQ_monthly_complete,
