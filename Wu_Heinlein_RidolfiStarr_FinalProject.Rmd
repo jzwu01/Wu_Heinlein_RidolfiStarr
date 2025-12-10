@@ -182,7 +182,16 @@ parameter.summary <- data.frame(
   "Maximum" = Maxima,
   "Mean" = Means,
   "Std_Deviation" = SDs)
+```
 
+Below are the raw data structure and a summary of the parameters examined in this project.
+```{r}
+#displaying data
+
+#raw data structure
+str(WQ_data_raw)
+
+#paramter summary
 kable(
   parameter.summary,
   align = c("l","c","r","r","r","r"),
@@ -215,6 +224,7 @@ mapview(
   )
 ```
 
+Monthly averages of the study parameters are visualized below. The vertical dotted line represents the implementation of the Miami-Dade County summer fertilizer ordinance (April, 2021).
 ```{r echo=FALSE}
 #Exploring series
 
@@ -315,8 +325,7 @@ print(CombinedDistributionPlot)
 ```{r}
 #time series
 
-#monthly
-
+#P overall trend analysis
 monthly.P.ts <- ts(WQ_monthly_complete$Interp_Phosphorous, start=c(2016,8), 
                    frequency=12)
 monthly.P.decomp <- stl(monthly.P.ts, s.window="periodic")
@@ -326,7 +335,40 @@ monthly.P.components <- mutate(monthly.P.components,
                                observed = WQ_monthly_complete$Interp_Phosphorous,
                                date = WQ_monthly_complete$Date)
 
-#phosphorous pre vs. post trend analysis
+#N overall trend analysis
+monthly.N.ts <- ts(WQ_monthly_complete$Interp_Total_N, start=c(2016,8), 
+                   frequency=12)
+monthly.N.decomp <- stl(monthly.N.ts, s.window="periodic")
+plot(monthly.N.decomp)
+monthly.N.components <- as.data.frame(monthly.N.decomp$time.series[,1:3])
+monthly.N.components <- mutate(monthly.N.components,
+                               observed = WQ_monthly_complete$Interp_Total_N,
+                               date = WQ_monthly_complete$Date)
+
+
+#O2 overall trend analysis
+monthly.O.ts <- ts(WQ_monthly_complete$Interp_Dissolved_O2, start=c(2016,8),
+                   frequency=12)
+monthly.O.decomp <- stl(monthly.O.ts, s.window="periodic")
+plot(monthly.O.decomp)
+monthly.O.components <- as.data.frame(monthly.O.decomp$time.series[,1:3])
+monthly.O.components <- mutate(monthly.O.components,
+                               observed = WQ_monthly_complete$Interp_Dissolved_O2,
+                               date = WQ_monthly_complete$Date)
+
+#pH overall trend analysis
+monthly.pH.ts <- ts(WQ_monthly_complete$Interp_pH, start=c(2016,8),
+                   frequency=12)
+monthly.pH.decomp <- stl(monthly.pH.ts, s.window="periodic")
+plot(monthly.pH.decomp)
+monthly.pH.components <- as.data.frame(monthly.pH.decomp$time.series[,1:3])
+monthly.pH.components <- mutate(monthly.pH.components,
+                               observed = WQ_monthly_complete$Interp_pH,
+                               date = WQ_monthly_complete$Date)
+
+
+
+#P pre vs. post trend analysis
 P.pre.ts <- ts(pre_ordinance_monthly$Interp_Phosphorous, start = c(2016,8),
                frequency=12)
 P.pre.decomp <- stl(P.pre.ts, s.window="periodic") 
@@ -335,7 +377,7 @@ P.pre.components <- as.data.frame(P.pre.decomp$time.series[,1:3])
 P.pre.components <- mutate(P.pre.components,
                             observed = pre_ordinance_monthly$Interp_Phosphorous,
                             date = pre_ordinance_monthly$Date)
-smk.test(P.pre.ts) #no significant trend
+P.pre.smk <- smk.test(P.pre.ts) #no significant trend
 
 
 P.post.ts <- ts(post_ordinance_monthly$Interp_Phosphorous, start = c(2021,4),
@@ -346,50 +388,180 @@ P.post.components <- as.data.frame(P.post.decomp$time.series[,1:3])
 P.post.components <- mutate(P.post.components,
                             observed = post_ordinance_monthly$Interp_Phosphorous,
                             date = post_ordinance_monthly$Date)
-smk <- smk.test(P.post.ts) #significant trend! 
-summary(smk)
+P.post.smk <- smk.test(P.post.ts) #significant trend! 
 
-ggplot() +
+#P pre vs post plot
+P.prevspost.plot <- ggplot() +
   geom_line(data=WQ_monthly_complete, aes(x=Date, y=Interp_Phosphorous)) +
-  geom_line(data=P.pre.components, aes(x=date, y=trend), color="blue") +
+  geom_line(data=P.pre.components, aes(x=date, y=trend), color="#005AB5") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2018-10-01"), y=0.02,
+            label=paste0("SMK p-value = ", round(P.pre.smk$p.value, 3)), 
+            color="#005AB5") +
   geom_line(data=P.post.components, aes(x=date, y=observed)) +
-  geom_line(data=P.post.components, aes(x=date, y=trend), color="blue") +
-  geom_vline(xintercept = as.Date("2021-04-01"), lty=2)
+  geom_line(data=P.post.components, aes(x=date, y=trend), color="#DC3220") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2023-05-01"), y=0.04,
+            label=paste0("SMK p-value = ", round(P.post.smk$p.value, 3), "*"),
+            color="#DC3220") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty=2) +
+  labs(
+    y="Total Phosphorous (mg/L)",
+    title="Comparing Pre- and Post-Ordinance Trends in Total Phosphorous",
+    x="")
+
+
+#N pre vs. post trend analysis
+N.pre.ts <- ts(pre_ordinance_monthly$Interp_Total_N, start = c(2016,8),
+               frequency=12)
+N.pre.decomp <- stl(N.pre.ts, s.window="periodic") 
+plot(N.pre.decomp)
+N.pre.components <- as.data.frame(N.pre.decomp$time.series[,1:3])
+N.pre.components <- mutate(N.pre.components,
+                            observed = pre_ordinance_monthly$Interp_Total_N,
+                            date = pre_ordinance_monthly$Date)
+N.pre.smk <- smk.test(N.pre.ts) 
+
+
+N.post.ts <- ts(post_ordinance_monthly$Interp_Total_N, start = c(2021,4),
+                frequency=12)
+N.post.decomp <- stl(N.post.ts, s.window = "periodic")
+plot(N.post.decomp)
+N.post.components <- as.data.frame(N.post.decomp$time.series[,1:3])
+N.post.components <- mutate(N.post.components,
+                            observed = post_ordinance_monthly$Interp_Total_N,
+                            date = post_ordinance_monthly$Date)
+N.post.smk <- smk.test(N.post.ts)
+
+#N pre vs post plot
+N.prevspost.plot <- ggplot() +
+  geom_line(data=WQ_monthly_complete, aes(x=Date, y=Interp_Total_N)) +
+  geom_line(data=N.pre.components, aes(x=date, y=trend), color="#005AB5") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2018-10-01"), y=0.8,
+            label=paste0("SMK p-value = ", round(N.pre.smk$p.value, 3)), 
+            color="#005AB5") +
+  geom_line(data=N.post.components, aes(x=date, y=observed)) +
+  geom_line(data=N.post.components, aes(x=date, y=trend), color="#DC3220") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2023-01-01"), y=0.8,
+            label=paste0("SMK p-value = ", round(N.post.smk$p.value, 3)),
+            color="#DC3220") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty=2) +
+  labs(
+    y="Total Nitrogen (mg/L)",
+    x="")
+
+
+#O2 pre vs. post trend analysis
+O.pre.ts <- ts(pre_ordinance_monthly$Interp_Dissolved_O2, start = c(2016,8),
+               frequency=12)
+O.pre.decomp <- stl(O.pre.ts, s.window="periodic") 
+plot(O.pre.decomp)
+O.pre.components <- as.data.frame(O.pre.decomp$time.series[,1:3])
+O.pre.components <- mutate(O.pre.components,
+                            observed = pre_ordinance_monthly$Interp_Dissolved_O2,
+                            date = pre_ordinance_monthly$Date)
+O.pre.smk <- smk.test(O.pre.ts) 
+
+
+O.post.ts <- ts(post_ordinance_monthly$Interp_Dissolved_O2, start = c(2021,4),
+                frequency=12)
+O.post.decomp <- stl(O.post.ts, s.window = "periodic")
+plot(O.post.decomp)
+O.post.components <- as.data.frame(O.post.decomp$time.series[,1:3])
+O.post.components <- mutate(O.post.components,
+                            observed = post_ordinance_monthly$Interp_Dissolved_O2,
+                            date = post_ordinance_monthly$Date)
+O.post.smk <- smk.test(O.post.ts)
+
+#O2 pre vs post plot
+O.prevspost.plot <- ggplot() +
+  geom_line(data=WQ_monthly_complete, aes(x=Date, y=Interp_Dissolved_O2)) +
+  geom_line(data=O.pre.components, aes(x=date, y=trend), color="#005AB5") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2019-09-01"), y=75,
+            label=paste0("SMK p-value = ",round(O.pre.smk$p.value, 2)), 
+            color="#005AB5") +
+  geom_line(data=O.post.components, aes(x=date, y=observed)) +
+  geom_line(data=O.post.components, aes(x=date, y=trend), color="#DC3220") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2023-05-01"), y=75,
+            label=paste0("SMK p-value = ", round(O.post.smk$p.value, 2)),
+            color="#DC3220") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty=2) +
+  labs(
+    y="Dissolved Oxygen (mg/L)",
+    x="")
+
+
+#pH pre vs. post trend analysis
+pH.pre.ts <- ts(pre_ordinance_monthly$Interp_pH, start = c(2016,8),
+               frequency=12)
+pH.pre.decomp <- stl(pH.pre.ts, s.window="periodic") 
+plot(pH.pre.decomp)
+pH.pre.components <- as.data.frame(pH.pre.decomp$time.series[,1:3])
+pH.pre.components <- mutate(pH.pre.components,
+                            observed = pre_ordinance_monthly$Interp_pH,
+                            date = pre_ordinance_monthly$Date)
+pH.pre.smk <- smk.test(pH.pre.ts) 
+
+
+pH.post.ts <- ts(post_ordinance_monthly$Interp_pH, start = c(2021,4),
+                frequency=12)
+pH.post.decomp <- stl(pH.post.ts, s.window = "periodic")
+plot(pH.post.decomp)
+pH.post.components <- as.data.frame(pH.post.decomp$time.series[,1:3])
+pH.post.components <- mutate(pH.post.components,
+                            observed = post_ordinance_monthly$Interp_pH,
+                            date = post_ordinance_monthly$Date)
+pH.post.smk <- smk.test(pH.post.ts)
+
+#pH pre vs post plot
+pH.prevspost.plot <- ggplot() +
+  geom_line(data=WQ_monthly_complete, aes(x=Date, y=Interp_pH)) +
+  geom_line(data=pH.pre.components, aes(x=date, y=trend), color="#005AB5") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2019-03-01"), y=8.75,
+            label=paste0("SMK p-value = ",round(pH.pre.smk$p.value, 2)), 
+            color="#005AB5") +
+  geom_line(data=pH.post.components, aes(x=date, y=observed)) +
+  geom_line(data=pH.post.components, aes(x=date, y=trend), color="#DC3220") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2023-05-01"), y=9.5,
+            label=paste0("SMK p-value = ", round(pH.post.smk$p.value, 2),"*"),
+            color="#DC3220") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty=2) +
+  ylim(6.5,10) +
+  labs(
+    y="pH")
+
+#combined pre vs post trend analysis plot
+plot_grid(P.prevspost.plot, N.prevspost.plot, O.prevspost.plot, pH.prevspost.plot,
+          nrow=4)
+
+#pre vs post SMK results summary table
+pre.stat.summary <- c(P.pre.smk$statistic, N.pre.smk$statistic, 
+                   O.pre.smk$statistic, pH.pre.smk$statistic)
+pre.pvalue.summary <- c(P.pre.smk$p.value, N.pre.smk$p.value,
+                        O.pre.smk$p.value, pH.pre.smk$p.value)
+post.stat.summary <- c(P.post.smk$statistic, N.post.smk$statistic,
+                       O.post.smk$statistic, pH.post.smk$statistic)
+post.pvalue.summary <- c(P.post.smk$p.value, N.post.smk$p.value,
+                        O.post.smk$p.value, pH.post.smk$p.value)
+
+prevspost.SMK.summary <- data.frame(
+  "Pre-Ordinance_Stat" = pre.stat.summary,
+  "Pre-Ordinance_p-value" = pre.pvalue.summary,
+  "Post-Ordinance_Stat" = post.stat.summary,
+  "Post-Ordinance_p-value" = post.pvalue.summary,
+  row.names = c("Total_Phosphorous", "Total_Nitrogen", "Dissolved_Oxygen", "pH"))
 
 
 
 
 
-
-
-monthly.N.ts <- ts(WQ_monthly_complete$Interp_Total_N, start=c(2016,8), 
-                   frequency=12)
-monthly.N.decomp <- stl(monthly.N.ts, s.window="periodic")
-plot(monthly.N.decomp)
-monthly.N.components <- as.data.frame(monthly.N.decomp$time.series[,1:3])
-monthly.N.components <- mutate(monthly.N.components,
-                               observed = WQ_monthly_complete$Interp_Total_N,
-                               date = WQ_monthly_complete$Date)
-
-monthly.O.ts <- ts(WQ_monthly_complete$Interp_Dissolved_O2, start=c(2016,8),
-                   frequency=12)
-monthly.O.decomp <- stl(monthly.O.ts, s.window="periodic")
-plot(monthly.O.decomp)
-monthly.O.components <- as.data.frame(monthly.O.decomp$time.series[,1:3])
-monthly.O.components <- mutate(monthly.O.components,
-                               observed = WQ_monthly_complete$Interp_Dissolved_O2,
-                               date = WQ_monthly_complete$Date)
-
-monthly.pH.ts <- ts(WQ_monthly_complete$Interp_pH, start=c(2016,8),
-                   frequency=12)
-monthly.pH.decomp <- stl(monthly.pH.ts, s.window="periodic")
-plot(monthly.pH.decomp)
-monthly.pH.components <- as.data.frame(monthly.pH.decomp$time.series[,1:3])
-monthly.pH.components <- mutate(monthly.pH.components,
-                               observed = WQ_monthly_complete$Interp_pH,
-                               date = WQ_monthly_complete$Date)
-
-#yearly
+#yearly TS
 yearly.P.ts <- ts(yearly_averages$Mean_Phosphorous, 
                   start = 2016,
                   frequency = 1)
