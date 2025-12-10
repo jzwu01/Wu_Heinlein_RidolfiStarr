@@ -22,6 +22,7 @@ library(zoo)
 library(trend)
 library(sf)
 library(mapview); mapviewOptions(fgb = FALSE) 
+library(cowplot)
 
 # Set your working directory
 here()
@@ -277,6 +278,64 @@ mapview(
   col="yellow",
   alpa.regions= 0.5
   )
+```
+
+Exploratory box plots showing the distribution of parameters of interest by year
+individually and as a combined plot 
+```{r}
+
+Total_Nitrogen_Distribution <- ggplot(WQ_monthly_complete,
+            aes(x=as.factor(Year),y=Interp_Total_N)
+            )+
+  geom_boxplot()+
+  xlab("Year")+
+  ylab("Total Nitrogen (mg/L)")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_blank())+
+  theme(axis.ticks.x = element_blank())
+print(Total_Nitrogen_Distribution)
+
+Total_Phosphorous_Distribution <- ggplot(WQ_monthly_complete,
+            aes(x=as.factor(Year),y=Interp_Phosphorous)
+            )+
+  geom_boxplot()+
+  xlab("Year")+
+  ylab("TotalPhosphorous (mg/L)")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_blank())+
+  theme(axis.ticks.x = element_blank())
+print(Total_Phosphorous_Distribution)
+
+Dissolved_O2_Distribution <- ggplot(WQ_monthly_complete,
+            aes(x=as.factor(Year),y=Interp_Dissolved_O2)
+            )+
+  geom_boxplot()+
+  xlab("Year")+
+  ylab("Dissolved O2 (mg/L)")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_blank())+
+  theme(axis.ticks.x = element_blank())
+print(Dissolved_O2_Distribution)
+
+pH_distribution <- ggplot(WQ_monthly_complete,
+            aes(x=as.factor(Year),y=Interp_pH)
+            )+
+  geom_boxplot()+
+  xlab("Year")+
+  ylab("pH")
+
+print(pH_distribution)
+
+CombinedDistributionPlot <- plot_grid(
+  Total_Nitrogen_Distribution,
+  Total_Phosphorous_Distribution,
+  Dissolved_O2_Distribution,
+  pH_distribution,
+  ncol=1,
+  align = "v"
+)
+
+print(CombinedDistributionPlot)
 ```
 
 
