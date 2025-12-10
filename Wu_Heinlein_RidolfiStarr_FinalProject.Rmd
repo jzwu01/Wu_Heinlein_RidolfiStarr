@@ -12,6 +12,7 @@ editor_options:
 \newpage
 
 ```{r setup}
+knitr::opts_chunk$set(echo = FALSE)
 
 # Load your packages
 library(tidyverse) 
@@ -47,19 +48,21 @@ WQ_data_raw <- read.csv(here("./Raw_Data/WQ_data.txt"), header = TRUE, sep = "|"
 
 
 # Rationale and Research Questions
-This study takes examines how the Miami Beach fertilizer ordinance affect 
-the various parameters used to assess water quality. For context, the Miami 
-Beach fertilizer ordinance prohibits the use of fertilizers containing 
-nitrogen and phosphorus during the summer rainy season, and it was first 
-passed and enacted in January, 2021. The ordinance is effective from May 15 
-through October 31 every year. 
+Urban coastal ecosystems are sensitive to stormwater runoff, which is the rain water and waste water that flows over streets, sidewalks, and other places. It picks up debris, fertilizers, and other pollutants along the way before entering into the stormwater system. The system is designed to drain cities of rain water and help to minimize flooding. Therefore, the stormwater systems carries the things that water picks up along the way before depositing the runoff to the surrounding waterways. This creates pollution problems and other serious impacts to the living species in the ecosystem, which happened near the Biscayne Bay area. To address such issues, the city of Miami Beach implemented the Miami Beach fertilizer ordinance that prohibits the use of fertilizers containing nitrogen and phosphorus during the summer rainy season. The ordinance was passed in January, 2021, and was adopted in April of the same year. The ordinance is effective from May 15  through November 1 every year (accounting for raining season). 
+
+This study examines whether measurable changes in nutrient concentrations or related indicators appeared following the implementation of the Miami Beach fertilizer ordinance by using data from the City of Miami Beach Water Monitoring Program. The goal is to quantify these changes through time series and statistical analyses. We chose to look at this specific dataset because it includes measurements for multiple years, and it’s specific to the area/location that we are looking to assess. It also includes data points for various nutrients measurements that are crucial to our analyses, such as values for total nitrogen, total phosphorus, dissolved oxygen, and PH.   
+
+Question 1: How did water quality in Biscayne Bay change following the 2021 summer fertilizer ordinance in terms of A) Total Phosphorous, B) Total Nitrogen, C) Dissolved Oxygen, and D) pH?
+
+Question 2: 
+ 
 
 
 \newpage
 
 # Dataset Information
 
-```{r}
+```{r echo=FALSE}
 #wrangling
 
 #Insert underscores into parameter names
@@ -71,7 +74,7 @@ levels(WQ_data_raw$ParameterName) <- c("Dissolved_O2", "NO2_NO3_Filtered", "pH",
 
 #pivot parameteres
 WQ_parameters_raw <- WQ_data_raw %>%
-  #select  columns of interest (we can add more later)
+  #select  columns of interest
   select(SampleDate, ParameterName, ResultValue, Year, Month, ProgramLocationID,
          OriginalLatitude, OriginalLongitude) %>%
   group_by(SampleDate, Year, Month, ProgramLocationID, OriginalLatitude,
@@ -191,7 +194,7 @@ kable(
 
 # Exploratory Analysis 
 
-```{r}
+```{r echo=FALSE}
 #Creating simple features data frame for spatial visualization 
 SampleLocations_sf <- WQ_data_raw %>%
   distinct(ProgramLocationID,OriginalLongitude, OriginalLatitude, .keep_all = FALSE) %>%
@@ -212,7 +215,7 @@ mapview(
   )
 ```
 
-```{r}
+```{r echo=FALSE}
 #Exploring series
 
 phosphorous.preview <- ggplot(WQ_monthly_complete) +
@@ -332,6 +335,46 @@ monthly.N.components <- mutate(monthly.N.components,
                                observed = WQ_monthly_complete$Interp_Total_N,
                                date = WQ_monthly_complete$Date)
 
+monthly.O.ts <- ts(WQ_monthly_complete$Interp_Dissolved_O2, start=c(2016,8),
+                   frequency=12)
+monthly.O.decomp <- stl(monthly.O.ts, s.window="periodic")
+plot(monthly.O.decomp)
+monthly.O.components <- as.data.frame(monthly.O.decomp$time.series[,1:3])
+monthly.O.components <- mutate(monthly.O.components,
+                               observed = WQ_monthly_complete$Interp_Dissolved_O2,
+                               date = WQ_monthly_complete$Date)
+
+monthly.pH.ts <- ts(WQ_monthly_complete$Interp_pH, start=c(2016,8),
+                   frequency=12)
+monthly.pH.decomp <- stl(monthly.pH.ts, s.window="periodic")
+plot(monthly.pH.decomp)
+monthly.pH.components <- as.data.frame(monthly.pH.decomp$time.series[,1:3])
+monthly.pH.components <- mutate(monthly.pH.components,
+                               observed = WQ_monthly_complete$Interp_pH,
+                               date = WQ_monthly_complete$Date)
+
+#yearly
+yearly.P.ts <- ts(yearly_averages$Mean_Phosphorous, 
+                  start = 2016,
+                  frequency = 1)
+#yearly.P.decomp <- stl(yearly.P.ts, s.window = "periodic") (not working)
+plot(yearly.P.ts)
+
+yearly.N.ts <- ts(yearly_averages$Mean_Total_N, 
+                  start = 2016,
+                  frequency = 1)
+plot(yearly.N.ts)
+
+yearly.O.ts <- ts(yearly_averages$Mean_Dissolved_O2, 
+                  start = 2016,
+                  frequency = 1)
+plot(yearly.O.ts)
+
+yearly.pH.ts <- ts(yearly_averages$Mean_pH, 
+                  start = 2016,
+                  frequency = 1)
+plot(yearly.pH.ts)
+
 ```
 
 
@@ -348,6 +391,18 @@ summary(yearly.N.anova)
 TukeyHSD(yearly.N.anova)
 N.HSD <- HSD.test(yearly.N.anova, "Year", group=TRUE)
 N.HSD
+
+yearly.O.anova <- aov(data=WQ_monthly_complete, Mean_Dissolved_O2 ~ Year)
+summary(yearly.O.anova)
+TukeyHSD(yearly.O.anova)
+O.HSD <- HSD.test(yearly.O.anova, "Year", group=TRUE)
+O.HSD
+
+yearly.pH.anova <- aov(data=WQ_monthly_complete, Mean_pH ~ Year)
+summary(yearly.pH.anova)
+TukeyHSD(yearly.pH.anova)
+O.HSD <- HSD.test(yearly.pH.anova, "Year", group=TRUE)
+O.HSD
 
 ```
 
