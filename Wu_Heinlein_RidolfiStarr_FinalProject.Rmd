@@ -113,7 +113,10 @@ WQ_monthly_complete <- left_join(dates_by_month, WQ_monthly_data)
 
 #interpolate monthly data
 WQ_monthly_complete <- WQ_monthly_complete %>%
+  select(
+    Date, Month, Mean_Phosphorous, Mean_Total_N, Mean_Dissolved_O2, Mean_pH) %>%
   mutate(
+    Year = as.factor(year(Date)),
     Interp_Phosphorous = na.approx(Mean_Phosphorous),
     Interp_pH = na.approx(Mean_pH),
     Interp_Dissolved_O2 = na.approx(Mean_Dissolved_O2),
@@ -566,7 +569,9 @@ prevspost.SMK.summary <- data.frame(
   "Post-Ordinance_p-value" = post.pvalue.summary,
   row.names = c("Total_Phosphorous", "Total_Nitrogen", "Dissolved_Oxygen", "pH"))
 
-
+#smk summary table
+kable(prevspost.SMK.summary, 
+      caption="Summary of Pre- and Post-Ordinance SMK Results")
 
 
 
@@ -621,7 +626,29 @@ TukeyHSD(yearly.pH.anova)
 pH.HSD <- HSD.test(yearly.pH.anova, "Year", group=TRUE)
 pH.HSD
 
-#putting HSD results into table
+#anova results table
+P.anova.results <- summary(yearly.P.anova)[[1]]
+N.anova.results <- summary(yearly.N.anova)[[1]]
+O.anova.results <- summary(yearly.O.anova)[[1]]
+pH.anova.results <- summary(yearly.pH.anova)[[1]]
+
+anova.results <- bind_rows(
+  P.anova.results,
+  N.anova.results,
+  O.anova.results,
+  pH.anova.results)
+
+anova.results <- anova.results %>%
+  mutate(Parameter = c(
+    "Total_Phosphorous", "Total_Phosphorous", "Total_Nitrogen", "Total_Nitrogen",
+    "Diss_O2", "Diss_O2", "pH", "pH")) %>%
+  select(Parameter, Df, `Sum Sq`, `Mean Sq`, `F value`, `Pr(>F)`)
+ 
+kable(anova.results,
+      row.names = T,
+      digits = c(1,1,3,3,3,5))
+
+#HSD results into table
 P.groups <- as.data.frame(P.HSD$groups)
 N.groups <- as.data.frame(N.HSD$groups)
 O.groups <- as.data.frame(O.HSD$groups)
