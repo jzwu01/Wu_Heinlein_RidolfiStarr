@@ -275,14 +275,11 @@ Total_Nitrogen_Distribution <- ggplot(WQ_monthly_complete,
             aes(x=Year,y=Interp_Total_N)
             )+
   geom_boxplot()+
-  #xlab("Year")+
-  #ylab("Total Nitrogen (mg/L)")+
-  labs(x = "Year",
-       y = "Total Nitrogen (mg/L)")
-  #theme(axis.title.x = element_blank())+
-  #theme(axis.text.x = element_blank())+
-  #theme(axis.ticks.x = element_blank())
-print(Total_Nitrogen_Distribution)
+  xlab("Year")+
+  ylab("Total Nitrogen (mg/L)")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_blank())+
+  theme(axis.ticks.x = element_blank())
 
 Total_Phosphorous_Distribution <- ggplot(WQ_monthly_complete,
             aes(x=as.factor(Year),y=Interp_Phosphorous)
@@ -314,7 +311,6 @@ pH_distribution <- ggplot(WQ_monthly_complete,
   xlab("Year")+
   ylab("pH")
 
-print(pH_distribution)
 
 CombinedDistributionPlot <- plot_grid(
   Total_Nitrogen_Distribution,
@@ -575,28 +571,103 @@ kable(prevspost.SMK.summary,
 
 
 
-#yearly TS
+#yearly TS with combined plots
+par(mfrow = c(2,2))
 yearly.P.ts <- ts(yearly_averages$Mean_Phosphorous, 
                   start = 2016,
                   frequency = 1)
-#yearly.P.decomp <- stl(yearly.P.ts, s.window = "periodic") (not working)
-plot(yearly.P.ts)
+plot(yearly.P.ts,
+     xlab = "Year",
+     ylab = "Phosphorous (mg/L)")
 
 yearly.N.ts <- ts(yearly_averages$Mean_Total_N, 
                   start = 2016,
                   frequency = 1)
-plot(yearly.N.ts)
+plot(yearly.N.ts,
+     xlab = "Year",
+     ylab = "Nitrogen (mg/L)")
 
 yearly.O.ts <- ts(yearly_averages$Mean_Dissolved_O2, 
                   start = 2016,
                   frequency = 1)
-plot(yearly.O.ts)
+plot(yearly.O.ts,
+      xlab = "Year",
+     ylab = "Dissolved Oxygen (mg/L)")
 
 yearly.pH.ts <- ts(yearly_averages$Mean_pH, 
                   start = 2016,
                   frequency = 1)
-plot(yearly.pH.ts)
+plot(yearly.pH.ts,
+     xlab = "Year",
+     ylab = "pH")
+par(mfrow = c(1,1))
 
+#comparison of monthly interpolated TS & yearly non-interpolated TS
+#Phosphorous
+P.yearly.plot <- ggplot() +
+  geom_line(data=yearly_averages, aes(x=Date, y=Mean_Phosphorous)) +
+  geom_line() +
+  geom_point() +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  #scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    x = "Year",
+    y = "Phosphorous (mg/L)",
+    title = "Yearly Mean Total Phosphorous")
+P.yearly.plot
+
+plot_grid(P.prevspost.plot, P.yearly.plot,
+          nrow=2,
+          align = "v")
+
+#Nitrogen
+N.yearly.plot <- ggplot() +
+  geom_line(data=yearly_averages, aes(x=Date, y=Mean_Total_N)) +
+  geom_line() +
+  geom_point() +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  #scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    x = "Year",
+    y = "Nitrogen (mg/L)",
+    title = "Yearly Mean Total Nitrogen")
+N.yearly.plot
+
+plot_grid(N.prevspost.plot, N.yearly.plot,
+          nrow=2,
+          align = "v")
+
+O.yearly.plot <- ggplot() +
+  geom_line(data=yearly_averages, aes(x=Date, y=Mean_Dissolved_O2)) +
+  geom_line() +
+  geom_point() +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  #scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    x = "Year",
+    y = "Dissolved Oxygen (mg/L)",
+    title = "Yearly Mean Total Dissolved Oxygen")
+O.yearly.plot
+
+plot_grid(O.prevspost.plot, O.yearly.plot,
+          nrow=2,
+          align = "v")
+
+pH.yearly.plot <- ggplot() +
+  geom_line(data=yearly_averages, aes(x=Date, y=Mean_pH)) +
+  geom_line() +
+  geom_point() +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  #scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    x = "Year",
+    y = "pH",
+    title = "Yearly Mean pH")
+pH.yearly.plot
+
+plot_grid(pH.prevspost.plot, pH.yearly.plot,
+          nrow=2,
+          align = "v")
 ```
 
 
