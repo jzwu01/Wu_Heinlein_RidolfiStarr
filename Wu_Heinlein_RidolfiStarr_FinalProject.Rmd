@@ -6,7 +6,7 @@ date: " Fall 2025"
 output: html_document
 editor_options: 
   chunk_output_type: console
-  toc: TRUE
+toc: TRUE
 ---
 \newpage
 \tableofcontents 
