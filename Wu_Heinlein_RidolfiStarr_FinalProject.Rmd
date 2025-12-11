@@ -236,29 +236,37 @@ Monthly averages of the study parameters are visualized below. The vertical dott
 ```{r echo=FALSE}
 #Exploring series
 
-phosphorous.preview <- ggplot(WQ_monthly_complete) +
-  geom_line(aes(x=Date, y=Mean_Phosphorous)) +
+phosphorous.preview <- ggplot(WQ_monthly_complete,
+  aes(x=Date, y=Mean_Phosphorous)) +
+  geom_line() +
+  geom_smooth(method="lm", se=FALSE)+
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
   labs(
     y="Dissolved Phosphorous (mg/L)",
     x="")
 
-nitrogen.preview <- ggplot(WQ_monthly_complete) +
-  geom_line(aes(x=Date, y=Mean_Total_N)) +
+nitrogen.preview <- ggplot(WQ_monthly_complete,
+  aes(x=Date, y=Mean_Total_N)) +
+  geom_line() +
+  geom_smooth(method="lm", se=FALSE)+
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
   labs(
     y="Total Nitrogen (mg/L)",
     x="")
 
-oxygen.preview <- ggplot(WQ_monthly_complete) +
-  geom_line(aes(x=Date, y=Mean_Dissolved_O2)) +
+oxygen.preview <- ggplot(WQ_monthly_complete,
+  aes(x=Date, y=Mean_Dissolved_O2)) +
+  geom_line() +
+  geom_smooth(method="lm", se=FALSE)+
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
   labs(
     y="Dissolved Oxygen (mg/L)",
     x="")
 
-pH.preview <- ggplot(WQ_monthly_complete) +
-  geom_line(aes(x=Date, y=Mean_pH)) +
+pH.preview <- ggplot(WQ_monthly_complete,
+  aes(x=Date, y=Mean_pH)) +
+  geom_line() +
+  geom_smooth(method="lm", se=FALSE)+
   geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
   labs(
     y="pH",
