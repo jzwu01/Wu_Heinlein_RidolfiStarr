@@ -19,7 +19,7 @@ editor_options:
 ```{r setup}
 knitr::opts_chunk$set(echo = FALSE)
 
-# Load your packages
+# Load packages
 library(tidyverse) 
 library(here) 
 library(cowplot)
@@ -32,17 +32,17 @@ library(cowplot)
 library(agricolae)
 library(knitr)
 
-# Set your working directory
+# Set working directory
 here()
 
-# Set your ggplot theme
+# Set ggplot theme
 mytheme <- theme_classic(base_size = 13) +
   theme(axis.text = element_text(color = "black"),
         plot.background = element_rect(fill = "white", color = NA),
         legend.position = "right")
 theme_set(mytheme)
 
-# Load your datasets
+# Load datasets
 WQ_data_raw <- read.csv(here("./Raw_Data/WQ_data.txt"), header = TRUE, sep = "|",
                         colClasses = c("ProgramLocationID"="factor",
                                        "Year"="factor",
@@ -113,7 +113,10 @@ WQ_monthly_complete <- left_join(dates_by_month, WQ_monthly_data)
 
 #interpolate monthly data
 WQ_monthly_complete <- WQ_monthly_complete %>%
+  select(
+    Date, Month, Mean_Phosphorous, Mean_Total_N, Mean_Dissolved_O2, Mean_pH) %>%
   mutate(
+    Year = as.factor(year(Date)),
     Interp_Phosphorous = na.approx(Mean_Phosphorous),
     Interp_pH = na.approx(Mean_pH),
     Interp_Dissolved_O2 = na.approx(Mean_Dissolved_O2),
@@ -269,7 +272,7 @@ individually and as a combined plot
 ```{r}
 
 Total_Nitrogen_Distribution <- ggplot(WQ_monthly_complete,
-            aes(x=as.factor(Year),y=Interp_Total_N)
+            aes(x=Year,y=Interp_Total_N)
             )+
   geom_boxplot()+
   xlab("Year")+
@@ -277,7 +280,6 @@ Total_Nitrogen_Distribution <- ggplot(WQ_monthly_complete,
   theme(axis.title.x = element_blank())+
   theme(axis.text.x = element_blank())+
   theme(axis.ticks.x = element_blank())
-print(Total_Nitrogen_Distribution)
 
 Total_Phosphorous_Distribution <- ggplot(WQ_monthly_complete,
             aes(x=as.factor(Year),y=Interp_Phosphorous)
@@ -309,7 +311,6 @@ pH_distribution <- ggplot(WQ_monthly_complete,
   xlab("Year")+
   ylab("pH")
 
-print(pH_distribution)
 
 CombinedDistributionPlot <- plot_grid(
   Total_Nitrogen_Distribution,
@@ -331,7 +332,7 @@ print(CombinedDistributionPlot)
 ```{r}
 #time series
 
-#P overall trend analysis
+#P overall monthly trend analysis
 monthly.P.ts <- ts(WQ_monthly_complete$Interp_Phosphorous, start=c(2016,8), 
                    frequency=12)
 monthly.P.decomp <- stl(monthly.P.ts, s.window="periodic")
@@ -341,7 +342,7 @@ monthly.P.components <- mutate(monthly.P.components,
                                observed = WQ_monthly_complete$Interp_Phosphorous,
                                date = WQ_monthly_complete$Date)
 
-#N overall trend analysis
+#N overall monthly trend analysis
 monthly.N.ts <- ts(WQ_monthly_complete$Interp_Total_N, start=c(2016,8), 
                    frequency=12)
 monthly.N.decomp <- stl(monthly.N.ts, s.window="periodic")
@@ -352,7 +353,7 @@ monthly.N.components <- mutate(monthly.N.components,
                                date = WQ_monthly_complete$Date)
 
 
-#O2 overall trend analysis
+#O2 overall monthly trend analysis
 monthly.O.ts <- ts(WQ_monthly_complete$Interp_Dissolved_O2, start=c(2016,8),
                    frequency=12)
 monthly.O.decomp <- stl(monthly.O.ts, s.window="periodic")
@@ -362,7 +363,7 @@ monthly.O.components <- mutate(monthly.O.components,
                                observed = WQ_monthly_complete$Interp_Dissolved_O2,
                                date = WQ_monthly_complete$Date)
 
-#pH overall trend analysis
+#pH overall monthly trend analysis
 monthly.pH.ts <- ts(WQ_monthly_complete$Interp_pH, start=c(2016,8),
                    frequency=12)
 monthly.pH.decomp <- stl(monthly.pH.ts, s.window="periodic")
@@ -374,7 +375,7 @@ monthly.pH.components <- mutate(monthly.pH.components,
 
 
 
-#P pre vs. post trend analysis
+#P pre vs. post monthly trend analysis
 P.pre.ts <- ts(pre_ordinance_monthly$Interp_Phosphorous, start = c(2016,8),
                frequency=12)
 P.pre.decomp <- stl(P.pre.ts, s.window="periodic") 
@@ -413,9 +414,9 @@ P.prevspost.plot <- ggplot() +
   geom_vline(xintercept = as.Date("2021-04-01"), lty=2) +
   labs(
     y="Total Phosphorous (mg/L)",
-    title="Comparing Pre- and Post-Ordinance Trends in Total Phosphorous",
+    #title="Comparing Pre- and Post-Ordinance Trends in Total Phosphorous",
     x="")
-
+P.prevspost.plot
 
 #N pre vs. post trend analysis
 N.pre.ts <- ts(pre_ordinance_monthly$Interp_Total_N, start = c(2016,8),
@@ -457,7 +458,7 @@ N.prevspost.plot <- ggplot() +
   labs(
     y="Total Nitrogen (mg/L)",
     x="")
-
+N.prevspost.plot
 
 #O2 pre vs. post trend analysis
 O.pre.ts <- ts(pre_ordinance_monthly$Interp_Dissolved_O2, start = c(2016,8),
@@ -499,7 +500,7 @@ O.prevspost.plot <- ggplot() +
   labs(
     y="Dissolved Oxygen (mg/L)",
     x="")
-
+O.prevspost.plot
 
 #pH pre vs. post trend analysis
 pH.pre.ts <- ts(pre_ordinance_monthly$Interp_pH, start = c(2016,8),
@@ -541,6 +542,7 @@ pH.prevspost.plot <- ggplot() +
   ylim(6.5,10) +
   labs(
     y="pH")
+pH.prevspost.plot
 
 #combined pre vs post trend analysis plot
 plot_grid(P.prevspost.plot, N.prevspost.plot, O.prevspost.plot, pH.prevspost.plot,
@@ -563,32 +565,109 @@ prevspost.SMK.summary <- data.frame(
   "Post-Ordinance_p-value" = post.pvalue.summary,
   row.names = c("Total_Phosphorous", "Total_Nitrogen", "Dissolved_Oxygen", "pH"))
 
+#smk summary table
+kable(prevspost.SMK.summary, 
+      caption="Summary of Pre- and Post-Ordinance SMK Results")
 
 
 
-
-#yearly TS
+#yearly TS with combined plots
+par(mfrow = c(2,2))
 yearly.P.ts <- ts(yearly_averages$Mean_Phosphorous, 
                   start = 2016,
                   frequency = 1)
-#yearly.P.decomp <- stl(yearly.P.ts, s.window = "periodic") (not working)
-plot(yearly.P.ts)
+plot(yearly.P.ts,
+     xlab = "Year",
+     ylab = "Phosphorous (mg/L)")
 
 yearly.N.ts <- ts(yearly_averages$Mean_Total_N, 
                   start = 2016,
                   frequency = 1)
-plot(yearly.N.ts)
+plot(yearly.N.ts,
+     xlab = "Year",
+     ylab = "Nitrogen (mg/L)")
 
 yearly.O.ts <- ts(yearly_averages$Mean_Dissolved_O2, 
                   start = 2016,
                   frequency = 1)
-plot(yearly.O.ts)
+plot(yearly.O.ts,
+      xlab = "Year",
+     ylab = "Dissolved Oxygen (mg/L)")
 
 yearly.pH.ts <- ts(yearly_averages$Mean_pH, 
                   start = 2016,
                   frequency = 1)
-plot(yearly.pH.ts)
+plot(yearly.pH.ts,
+     xlab = "Year",
+     ylab = "pH")
+par(mfrow = c(1,1))
 
+#comparison of monthly interpolated TS & yearly non-interpolated TS
+#Phosphorous
+P.yearly.plot <- ggplot() +
+  geom_line(data=yearly_averages, aes(x=Date, y=Mean_Phosphorous)) +
+  geom_line() +
+  geom_point() +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  #scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    x = "Year",
+    y = "Phosphorous (mg/L)",
+    title = "Yearly Mean Total Phosphorous")
+P.yearly.plot
+
+plot_grid(P.prevspost.plot, P.yearly.plot,
+          nrow=2,
+          align = "v")
+
+#Nitrogen
+N.yearly.plot <- ggplot() +
+  geom_line(data=yearly_averages, aes(x=Date, y=Mean_Total_N)) +
+  geom_line() +
+  geom_point() +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  #scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    x = "Year",
+    y = "Nitrogen (mg/L)",
+    title = "Yearly Mean Total Nitrogen")
+N.yearly.plot
+
+plot_grid(N.prevspost.plot, N.yearly.plot,
+          nrow=2,
+          align = "v")
+
+O.yearly.plot <- ggplot() +
+  geom_line(data=yearly_averages, aes(x=Date, y=Mean_Dissolved_O2)) +
+  geom_line() +
+  geom_point() +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  #scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    x = "Year",
+    y = "Dissolved Oxygen (mg/L)",
+    title = "Yearly Mean Total Dissolved Oxygen")
+O.yearly.plot
+
+plot_grid(O.prevspost.plot, O.yearly.plot,
+          nrow=2,
+          align = "v")
+
+pH.yearly.plot <- ggplot() +
+  geom_line(data=yearly_averages, aes(x=Date, y=Mean_pH)) +
+  geom_line() +
+  geom_point() +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  #scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    x = "Year",
+    y = "pH",
+    title = "Yearly Mean pH")
+pH.yearly.plot
+
+plot_grid(pH.prevspost.plot, pH.yearly.plot,
+          nrow=2,
+          align = "v")
 ```
 
 
@@ -618,7 +697,29 @@ TukeyHSD(yearly.pH.anova)
 pH.HSD <- HSD.test(yearly.pH.anova, "Year", group=TRUE)
 pH.HSD
 
-#putting HSD results into table
+#anova results table
+P.anova.results <- summary(yearly.P.anova)[[1]]
+N.anova.results <- summary(yearly.N.anova)[[1]]
+O.anova.results <- summary(yearly.O.anova)[[1]]
+pH.anova.results <- summary(yearly.pH.anova)[[1]]
+
+anova.results <- bind_rows(
+  P.anova.results,
+  N.anova.results,
+  O.anova.results,
+  pH.anova.results)
+
+anova.results <- anova.results %>%
+  mutate(Parameter = c(
+    "Total_Phosphorous", "Total_Phosphorous", "Total_Nitrogen", "Total_Nitrogen",
+    "Diss_O2", "Diss_O2", "pH", "pH")) %>%
+  select(Parameter, Df, `Sum Sq`, `Mean Sq`, `F value`, `Pr(>F)`)
+ 
+kable(anova.results,
+      row.names = T,
+      digits = c(1,1,3,3,3,5))
+
+#HSD results into table
 P.groups <- as.data.frame(P.HSD$groups)
 N.groups <- as.data.frame(N.HSD$groups)
 O.groups <- as.data.frame(O.HSD$groups)
