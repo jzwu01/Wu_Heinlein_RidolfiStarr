@@ -284,7 +284,7 @@ plot_grid(phosphorous.preview, nitrogen.preview, oxygen.preview, pH.preview, nro
 
 Exploratory box plots showing the distribution of parameters of interest by year
 individually and as a combined plot 
-```{r}
+```{r echo=FALSE}
 
 Total_Nitrogen_Distribution <- ggplot(WQ_monthly_complete,
             aes(x=Year,y=Interp_Total_N)
@@ -345,7 +345,7 @@ print(CombinedDistributionPlot)
 
 # Analysis
 
-```{r}
+```{r echo=FALSE}
 #time series
 
 #P overall monthly ts
@@ -590,7 +590,7 @@ kable(prevspost.SMK.summary,
 [insert description of TS plots & SMK results]
 
 
-```{r}
+```{r echo=FALSE}
 #yearly TS with combined plots
 par(mfrow = c(2,2))
 yearly.P.ts <- ts(yearly_averages$Mean_Phosphorous, 
@@ -688,10 +688,32 @@ pH.yearly.plot
 plot_grid(pH.prevspost.plot, pH.yearly.plot,
           nrow=2,
           align = "v")
+
+#MK test on yearly ts
+P.mk <- mk.test(yearly.P.ts)
+N.mk <- mk.test(yearly.N.ts)
+O.mk <- mk.test(yearly.O.ts)
+pH.mk <- mk.test(yearly.pH.ts)
+
+mk.stat.summary <- 
+  c(P.mk$statistic,N.mk$statistic,O.mk$statistic,pH.mk$statistic)
+mk.pvalue.summary <-
+  c(P.mk$p.value,N.mk$p.value,O.mk$p.value,pH.mk$p.value)
+
+mk.summary <- data.frame(
+  "S.Stat" = mk.stat.summary,
+  "p.value" = mk.pvalue.summary,
+  row.names = c("Total_Phosphorous", "Total_Nitrogen", "Dissolved_O2", "pH"))
+
+kable(mk.summary,
+      digits=c(3,3),
+      caption="Summary of Mann Kendall Results for Yearly Averages")
 ```
 
+[insert description of yearly TS vs interpolated plots, MK results]
 
-```{r}
+
+```{r echo=FALSE}
 #ANOVA
 yearly.P.anova <- aov(data=WQ_monthly_complete, Mean_Phosphorous ~ Year)
 summary(yearly.P.anova)
@@ -759,6 +781,8 @@ kable(parameter.anova.groups,
       digits=c(3,1,3,1,3,1,3,1,3),
       caption="Summary of Tukey's HSD Test Results")
 ```
+
+[insert ANOVA results]
 
 ## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
 
