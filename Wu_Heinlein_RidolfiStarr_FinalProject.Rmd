@@ -287,9 +287,9 @@ individually and as a combined plot
 ```{r echo=FALSE}
 
 Total_Nitrogen_Distribution <- ggplot(WQ_monthly_complete,
-            aes(x=Year,y=Interp_Total_N)
+            aes(x=Year,y=Mean_Total_N)
             )+
-  geom_boxplot()+
+  geom_boxplot(na.rm= TRUE)+
   xlab("Year")+
   ylab("Total Nitrogen (mg/L)")+
   theme(axis.title.x = element_blank())+
@@ -297,32 +297,31 @@ Total_Nitrogen_Distribution <- ggplot(WQ_monthly_complete,
   theme(axis.ticks.x = element_blank())
 
 Total_Phosphorous_Distribution <- ggplot(WQ_monthly_complete,
-            aes(x=as.factor(Year),y=Interp_Phosphorous)
+            aes(x=as.factor(Year),y=Mean_Phosphorous)
             )+
-  geom_boxplot()+
+  geom_boxplot(na.rm = TRUE)+
   xlab("Year")+
   ylab("TotalPhosphorous (mg/L)")+
   theme(axis.title.x = element_blank())+
   theme(axis.text.x = element_blank())+
   theme(axis.ticks.x = element_blank())
-print(Total_Phosphorous_Distribution)
+
 
 Dissolved_O2_Distribution <- ggplot(WQ_monthly_complete,
-            aes(x=as.factor(Year),y=Interp_Dissolved_O2)
+            aes(x=as.factor(Year),y=Mean_Dissolved_O2)
             )+
-  geom_boxplot()+
+  geom_boxplot(na.rm = TRUE)+
   xlab("Year")+
   ylab("Dissolved O2 (mg/L)")+
   theme(axis.title.x = element_blank())+
   theme(axis.text.x = element_blank())+
-  theme(axis.ticks.x = element_blank())+
-  ylim(NA,60)
-print(Dissolved_O2_Distribution)
+  theme(axis.ticks.x = element_blank())
+
 
 pH_distribution <- ggplot(WQ_monthly_complete,
-            aes(x=as.factor(Year),y=Interp_pH)
+            aes(x=as.factor(Year),y=Mean_pH)
             )+
-  geom_boxplot()+
+  geom_boxplot(na.rm = TRUE)+
   xlab("Year")+
   ylab("pH")
 
