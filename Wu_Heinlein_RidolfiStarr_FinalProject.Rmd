@@ -659,7 +659,6 @@ P.yearly.plot <- ggplot() +
     x = "Year",
     y = "Phosphorous (mg/L)",
     title = "Yearly Mean Total Phosphorous")
-P.yearly.plot
   
 plot_grid(P.prevspost.plot, P.yearly.plot,
           nrow=2,
@@ -676,7 +675,7 @@ N.yearly.plot <- ggplot() +
     x = "Year",
     y = "Nitrogen (mg/L)",
     title = "Yearly Mean Total Nitrogen")
-N.yearly.plot
+
 
 plot_grid(N.prevspost.plot, N.yearly.plot,
           nrow=2,
@@ -692,7 +691,7 @@ O.yearly.plot <- ggplot() +
     x = "Year",
     y = "Dissolved Oxygen (mg/L)",
     title = "Yearly Mean Total Dissolved Oxygen")
-O.yearly.plot
+
 
 plot_grid(O.prevspost.plot, O.yearly.plot,
           nrow=2,
@@ -708,7 +707,7 @@ pH.yearly.plot <- ggplot() +
     x = "Year",
     y = "pH",
     title = "Yearly Mean pH")
-pH.yearly.plot
+
 
 plot_grid(pH.prevspost.plot, pH.yearly.plot,
           nrow=2,
