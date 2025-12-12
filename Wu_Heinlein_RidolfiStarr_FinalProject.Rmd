@@ -22,13 +22,34 @@ editor_options:
 
 *Dataset Information*
 
-1.  Table \@ref(tab:table1): Parameter Summary Statistics
+* Table \@ref(tab:table1): Parameter Summary Statistics
 
 *Analysis*
 
-2.  Table \@ref(tab:SMK): Results Summary of SMK on Pre- and Post-Ordinance Monthly Averages
-3.  Table \@ref(tab:anova): Results Summary of ANOVA on Yearly Averages
-3.  Table \@ref(tab:Tukey): Results Summary of Tukey's HSD on Yearly Averages
+* Table \@ref(tab:SMK): Results Summary of SMK on Pre- and Post-Ordinance Monthly Averages
+* Table \@ref(tab:anova): Results Summary of ANOVA on Yearly Averages
+* Table \@ref(tab:Tukey): Results Summary of Tukey's HSD on Yearly Averages
+
+## List of Figures
+
+*Dataset Information*
+
+* Figure \@ref(fig:points): Water Quality Parameter Readings
+
+*Exploratory Analysis*
+
+* Figure \@ref(fig-map): Locations of Water Quality Sampling Sites
+* Figure \@ref(fig:previewplots): Monthly Averages of Water Quality Parameters
+* Figure \@ref(fig:boxplots): Distributions of Water Quality Parameter Values by Year
+
+*Analysis*
+
+* Figure \@ref(fig:prevspostTS): Comparing Pre- and Post-Ordinance Trends in Water Quality Parameters
+* Figure \@ref(fig:yearlyTS): Parameter Yearly Averages
+* Figure \@ref(fig:Pyearlyvsmonthly): Comparing Yearly Averages with Interpolated Monthly Averages: Phosphorous
+* Figure \@ref(fig:Nyearlyvsmonthly): Comparing Yearly Averages with Interpolated Monthly Averages: Nitrogen
+* Figure \@ref(fig:Oyearlyvsmonthly): Comparing Yearly Averages with Interpolated Monthly Averages: Dissolved Oxygen
+* Figure \@ref(fig:pHyearlyvsmonthly): Comparing Yearly Averages with Interpolated Monthly Averages: pH
 
     ```{=tex}
     \listoftables 
@@ -36,6 +57,8 @@ editor_options:
     \listoffigures 
     \newpage
     ```
+
+---
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -76,6 +99,8 @@ WQ_data_raw <- read.csv(here("./Raw_Data/WQ_data.txt"), header = TRUE, sep = "|"
 Urban coastal ecosystems are sensitive to stormwater runoff, which is rain water and waste water that flows over streets, sidewalks, and other surfaces. It picks up debris, oil, fertilizers, and other pollutants along the way before entering the stormwater system. The system is designed to drain cities of rain water and help minimize flooding. As a result, it carries and deposits polluted runoff into surrounding waterways, causing harm to nearby ecosystems. Unfortunately, this is the case for Biscayne Bay near the City of Miami Beach. To address such issues, Miami-Dade County implemented an ordinance that prohibits the use of fertilizers containing nitrogen and phosphorus during the summer rainy season. The ordinance was passed in January, 2021, and was adopted in April of the same year. The ordinance is effective from May 15 through October 31 every year (accounting for raining season).
 
 This study examines whether measurable changes in nutrient concentrations or related indicators appeared following the implementation of the Miami-Dade County fertilizer ordinance by using data from the City of Miami Beach Water Monitoring Program. The goal is to quantify these changes through time series and statistical analyses. We chose to look at this specific dataset because it includes measurements for multiple years, and it is specific to the location that we are looking to assess. It also measures parameters that are crucial to our analyses: total nitrogen, total phosphorus, dissolved oxygen, and pH. We 
+
+---
 
 \newpage
 
@@ -249,17 +274,20 @@ str(WQ_data_raw)
 \
 \
 
-```{r figure1, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Water Quality Parameter Readings"}
+```{r points, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Water Quality Parameter Readings"}
 #show points 
 print(points.preview)
 ```
+[say something here; maybe about outliers]
+
+\
 
 ## Data Wrangling
 
 [insert wrangling description]
 
 ```{r table1, echo=FALSE, message=FALSE, warning=FALSE}
-#paramter summary
+#parameter summary
 kable(
   parameter.summary,
   align = c("l","c","r","r","r","r"),
@@ -267,13 +295,15 @@ kable(
   caption = "Parameter Summary Statistics")
 ```
 
+---
+
 \newpage
 
 # Exploratory Analysis
 
 ## Geographic Context
 
-```{r map, echo=FALSE, message=FALSE, warning=FALSE}
+```{r map, echo=FALSE, message=FALSE, warning=FALSE, label="map", fig.cap="Locations of Water Quality Sampling Sites"}
 #Creating simple features data frame for spatial visualization 
 SampleLocations_sf <- WQ_data_raw %>%
   distinct(ProgramLocationID,OriginalLongitude, OriginalLatitude, .keep_all = FALSE) %>%
@@ -295,11 +325,11 @@ mapview(
 ```
 
 [insert description of study area, anything else relevant]\
-\## Monthly Averages
+\
 
-Monthly averages of the study parameters are visualized below. The vertical dotted line represents the implementation of the Miami-Dade County summer fertilizer ordinance (April, 2021).
+## Monthly Averages
 
-```{r preview plots, echo=FALSE, message=FALSE, warning=FALSE, fig.height=12, fig.cap="Monthly Averages of Water Quality Parameters"}
+```{r previewplots, echo=FALSE, message=FALSE, warning=FALSE, fig.height=11, fig.cap="Monthly Averages of Water Quality Parameters"}
 #Exploring series
 
 phosphorous.preview <- ggplot(WQ_monthly_complete,
@@ -342,14 +372,13 @@ plot_grid(phosphorous.preview, nitrogen.preview, oxygen.preview, pH.preview, nro
 
 ```
 
-We began by creating line plots for each parameter, showing their monthly concentrations through time (Figure\@ref(fig:preview plots)). Each plot was fitted with a trend line and a vertical line indicated when the County’s fertilizer ordinance went into effect. Based on these plots, total phosphorous appears to be decreasing over the monitoring period and is the only parameter that shows a discernable trend. While total nitrogen, dissolved oxygen, and pH exhibit fluctuations in monthly values, these plots do not indicate trends in these parameters between 2016 and 2024. Plotting these values also exposed multiple data gaps in the series, with the most extensive occurring in 2022. This was an important finding with implications for time series analysis.
+We began by creating line plots for each parameter, showing their average monthly concentrations through time (Figure \@ref(fig:previewplots)). The vertical dotted line represents the implementation of the Miami-Dade County summer fertilizer ordinance (April, 2021). Each plot was fitted with a trend line and a vertical line indicated when the County’s fertilizer ordinance went into effect. Based on these plots, total phosphorous appears to be decreasing over the monitoring period and is the only parameter that shows a discernable trend. While total nitrogen, dissolved oxygen, and pH exhibit fluctuations in monthly values, these plots do not indicate trends in these parameters between 2016 and 2024. Plotting these values also exposed multiple data gaps in the series, with the most extensive occurring in 2022. This was an important finding with implications for time series analysis.
 
 \
-\## Yearly Averages
 
-Exploratory box plots showing the distribution of study parameter values by year.
+## Yearly Distributions
 
-```{r boxplots, echo=FALSE, message=FALSE, warning=FALSE, fig.height=12, fig.cap="Distributions of Water Quality Parameter Values by Year"}
+```{r boxplots, echo=FALSE, message=FALSE, warning=FALSE, fig.height=9, fig.cap="Distributions of Water Quality Parameter Values by Year"}
 
 Total_Nitrogen_Distribution <- ggplot(WQ_monthly_complete,
             aes(x=Year,y=Mean_Total_N)
@@ -392,8 +421,8 @@ pH_distribution <- ggplot(WQ_monthly_complete,
 
 
 CombinedDistributionPlot <- plot_grid(
-  Total_Nitrogen_Distribution,
   Total_Phosphorous_Distribution,
+  Total_Nitrogen_Distribution,
   Dissolved_O2_Distribution,
   pH_distribution,
   ncol=1,
@@ -412,7 +441,7 @@ In addition to the preliminary exploration of trends in the data, we also used b
 
 ### Pre- vs. Post-Ordinance Monthly Trend Analysis
 
-```{r pre vs post TS, echo=FALSE, message=FALSE, warning=FALSE, fig.height=12, fig.cap="Comparing Pre- and Post-Ordinance Trends in Water Quality Parameters"}
+```{r prevspostTS, echo=FALSE, message=FALSE, warning=FALSE, fig.height=11, fig.cap="Comparing Pre- and Post-Ordinance Trends in Water Quality Parameters"}
 #time series
 
 #P overall monthly ts
@@ -615,6 +644,8 @@ plot_grid(P.prevspost.plot, N.prevspost.plot, O.prevspost.plot, pH.prevspost.plo
           nrow=4)
 ```
 
+We conducted a monthly time series analysis of the four study parameters to assess whether monotonic trends differed before and after the implementation of the ordinance. The dashed vertical line in these plots represents implementation of the ordinance. Seasonal Mann-Kendall (SMK) tests were applied separately to pre- and post-ordinance periods to evaluate the presence of statistically significant monotonic trends while accounting for seasonality (Figure \@ref(fig:prevspostTS)).
+
 \
 
 ```{r SMK, echo=FALSE, message=FALSE, warning=FALSE}
@@ -641,23 +672,19 @@ kable(prevspost.SMK.summary,
       caption="Results Summary of SMK on Pre- and Post-Ordinance Monthly Averages")
 ```
 
-We conducted a monthly time series analysis of the four study parameters to assess whether monotonic trends differed before and after the implementation of the ordinance. The dashed vertical line in these plots represents implementation of the ordinance. Seasonal Mann-Kendall (SMK) tests were applied separately to pre- and post-ordinance periods to evaluate the presence of statistically significant monotonic trends while accounting for seasonality (Figure xx).
-
-Time series analysis reveals statistically significant, downward monotonic trends in post-ordinance Total Phosphorous (SMK; z \< 0, p-value \< 0.05) and post-ordinance pH (SMK; z \< 0, p-value \< 0.05). For both parameters, no significant trend was observed prior to the ordinance implementation. For the other two parameters, Total Nitrogen and Dissolved Oxygen, plotted time series trends show some variability, but no significant monotonic trends before or after the ordinance. SMK results for all parameters are summarized in Table \_\_.
+Time series analysis reveals statistically significant, downward monotonic trends in post-ordinance Total Phosphorous (SMK; z \< 0, p-value \< 0.05) and post-ordinance pH (SMK; z \< 0, p-value \< 0.05). For both parameters, no significant trend was observed prior to the ordinance implementation. For the other two parameters, Total Nitrogen and Dissolved Oxygen, plotted time series trends show some variability, but no significant monotonic trends before or after the ordinance. SMK results for all parameters are summarized in Table \@ref(tab:SMK).
 
 ### Comparison of Monthly and Yearly Trends
 
-To assess whether the interpolated monthly averages reflect a reasonable description of the missing observations, we created plots that show trends of the yearly mean values for the different parameters between 2016 and 2025 without interpolation (Figure xx). For all parameters, yearly averages maintained the direction and relative magnitude of post-ordinance changes observed earlier in the monthly data.
-
-```{r yearly vs monthly TS, echo=FALSE, message=FALSE, warning=FALSE}
+```{r yearlyTS, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Parameter Yearly Averages"}
 #yearly TS with combined plots
 par(mfrow = c(2,2))
 yearly.P.ts <- ts(yearly_averages$Mean_Phosphorous, 
                   start = 2016,
                   frequency = 1)
 plot(yearly.P.ts,
-     xlab = "Year",
-     ylab = "Phosphorous (mg/L)")
+    xlab = "Year",
+    ylab = "Phosphorous (mg/L)")
 
 yearly.N.ts <- ts(yearly_averages$Mean_Total_N, 
                   start = 2016,
@@ -680,7 +707,13 @@ plot(yearly.pH.ts,
      xlab = "Year",
      ylab = "pH")
 par(mfrow = c(1,1))
+```
 
+To assess whether the interpolated monthly averages reflect a reasonable description of the missing observations, we created plots that show trends of the yearly mean values for the different parameters between 2016 and 2025 without interpolation (Figure \@ref(fig:yearlyTS)). For all parameters, yearly averages maintained the direction and relative magnitude of post-ordinance changes observed earlier in the monthly data.
+
+\
+\
+```{r Pyearlyvsmonthly, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Comparing Yearly Averages with Interpolated Monthly Averages: Phosphorous"}
 #comparison of monthly interpolated TS & yearly non-interpolated TS
 #Phosphorous
 P.yearly.plot <- ggplot() +
@@ -697,7 +730,10 @@ P.yearly.plot <- ggplot() +
 plot_grid(P.prevspost.plot, P.yearly.plot,
           nrow=2,
           align = "v")
-
+```
+\
+\
+```{r Nyearlyvsmonthly, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Comparing Yearly Averages with Interpolated Monthly Averages: Nitrogen"}
 #Nitrogen
 N.yearly.plot <- ggplot() +
   geom_line(data=yearly_averages, aes(x=Date, y=Mean_Total_N)) +
@@ -714,7 +750,10 @@ N.yearly.plot <- ggplot() +
 plot_grid(N.prevspost.plot, N.yearly.plot,
           nrow=2,
           align = "v")
-
+```
+\
+\
+```{r Oyearlyvsmonthly, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Comparing Yearly Averages with Interpolated Monthly Averages: Dissolved Oxygen"}
 O.yearly.plot <- ggplot() +
   geom_line(data=yearly_averages, aes(x=Date, y=Mean_Dissolved_O2)) +
   geom_line() +
@@ -730,7 +769,10 @@ O.yearly.plot <- ggplot() +
 plot_grid(O.prevspost.plot, O.yearly.plot,
           nrow=2,
           align = "v")
-
+```
+\
+\
+```{r pHyearlyvsmonthly, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Comparing Yearly Averages with Interpolated Monthly Averages: pH"}
 pH.yearly.plot <- ggplot() +
   geom_line(data=yearly_averages, aes(x=Date, y=Mean_pH)) +
   geom_line() +
@@ -798,7 +840,7 @@ kable(anova.results,
 
 One-way analysis of variance (ANOVA) was performed on the four study parameters using year as a categorical variable to calculate means (without interpolation). Analysis of Total Phosphorous (df = 8, F = 36.18, p \< 0.00001), Total Nitrogen (df = 8, F = 3.554, p \< 0.005), and Dissolved Oxygen (df = 8, F = 2.61, p \< 0.05) found statistically significant differences among the yearly means. There were no statistically significant differences among yearly means for pH (df = 8, F = 1.86, p = 0.078). These results indicate that there are relatively stronger shifts between years in average total phosphorous, total nitrogen, and dissolved oxygen compared to pH.
 
-Following ANOVA, Tukey’s honestly significant difference test (HSD) was used to identify years with diverging means across variables. The pH parameter was omitted from this test to avoid type I error, since ANOVA failed to produce a statistically significant result. HSD results are summarized in Table \_\_. 
+Following ANOVA, Tukey’s honestly significant difference test (HSD) was used to identify years with diverging means across variables. The pH parameter was omitted from this test to avoid type I error, since ANOVA failed to produce a statistically significant result. HSD results are summarized in Table \@ref(tab:Tukey). 
 
 ```{r Tukey, echo=FALSE, message=FALSE, warning=FALSE}
 #HSD results into table
@@ -843,13 +885,22 @@ With the exception of the anomalous dissolved oxygen average, these results sugg
 ## Total Phosphorous
 
 \
-\## Total Nitrogen
+\
+
+## Total Nitrogen
 
 \
-\## Dissolved Oxygen
+\
+
+## Dissolved Oxygen
 
 \
-\## pH
+\
+
+## pH
+
+\
+\
 
 ## Overall
 
