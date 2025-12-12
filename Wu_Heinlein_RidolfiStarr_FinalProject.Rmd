@@ -722,7 +722,7 @@ plot(yearly.pH.ts,
 par(mfrow = c(1,1))
 ```
 
-To assess whether the interpolated monthly averages reflect a reasonable description of the missing observations, we created plots that show trends of the yearly mean values for the different parameters between 2016 and 2025 without interpolation (Figure \@ref(fig:yearlyTS)). For all parameters, yearly averages maintained the direction and relative magnitude of post-ordinance changes observed earlier in the monthly data.
+To assess whether the interpolated monthly averages reasonably describe the overall behavior of the data, we created plots that show trends of the yearly mean values for the different parameters between 2016 and 2025 without interpolation (Figure \@ref(fig:yearlyTS)). For all parameters, yearly averages maintain the direction and relative magnitude of post-ordinance changes observed earlier in the monthly data.
 
 \
 \
@@ -803,10 +803,12 @@ plot_grid(pH.prevspost.plot, pH.yearly.plot,
           align = "v")
 ```
 
-To compare the results in a more visual way, we stacked the monthly and yearly plots to assess their trends for each of the parameters. For all four parameters, the monthly and yearly plots seem to follow similar trends. The yearly mean total phosphorus concentrations show a clear decline beginning in 2021, which is consistent with the significant post-ordinance monotonic trend we identified earlier in monthly analyses. The yearly mean total nitrogen presented larger variability regarding trends throughout the years, but its general trend had a declining direction after 2021. The yearly mean dissolved oxygen had large spikes during the early times and showed limited differentiation after ordinance implementation, while the yearly mean pH showed a modest decline following 2021.
+To compare the results in a more visual way, we stacked the monthly and yearly plots to assess their trends for each of the parameters (Figures \@ref(fig:Pyearlyvsmonthly), \@ref(fig:Nyearlyvsmonthly), \@ref(fig:Oyearlyvsmonthly), \@ref(fig:pHyearlyvsmonthly)). For all four parameters, the monthly and yearly plots seem to follow similar trends. The yearly mean total phosphorus concentrations show a clear decline beginning in 2021, which is consistent with the significant post-ordinance monotonic trend we identified earlier in monthly analyses. The yearly mean total nitrogen presented larger variability regarding trends throughout the years, but its general trend had a declining direction after 2021. The yearly mean dissolved oxygen had large spikes during the early times and showed limited differentiation after ordinance implementation, while the yearly mean pH showed a modest decline following 2021.
 
 The similar plot patterns between the monthly and yearly time series suggest that the observed post-ordinance declines in phosphorous and pH are consistent across time scales, while nitrogen and dissolved oxygen show high variability in both datasets.
 
+\
+\
 ## Question 2: Are there significant differences among the yearly averages for A) Total Phosphorous, B) Total Nitrogen, C) Dissolved Oxygen, and D) pH?
 
 ```{r anova, echo=FALSE, message=FALSE, warning=FALSE}
@@ -853,6 +855,7 @@ kable(anova.results,
 
 One-way analysis of variance (ANOVA) was performed on the four study parameters using year as a categorical variable to calculate means (without interpolation). Analysis of Total Phosphorous (df = 8, F = 36.18, p \< 0.00001), Total Nitrogen (df = 8, F = 3.554, p \< 0.005), and Dissolved Oxygen (df = 8, F = 2.61, p \< 0.05) found statistically significant differences among the yearly means. There were no statistically significant differences among yearly means for pH (df = 8, F = 1.86, p = 0.078). These results indicate that there are relatively stronger shifts between years in average total phosphorous, total nitrogen, and dissolved oxygen compared to pH.
 
+\
 ```{r Tukey, echo=FALSE, message=FALSE, warning=FALSE}
 #HSD results into table
 P.groups <- as.data.frame(P.HSD$groups)
