@@ -21,8 +21,11 @@ editor_options:
 ## List of Tables
 
 *Dataset Information*
+
 1.  Table \@ref(tab:table1): Parameter Summary Statistics
+
 *Analysis*
+
 2.  Table \@ref(tab:SMK): Results Summary of SMK on Pre- and Post-Ordinance Monthly Averages
 3.  Table \@ref(tab:anova): Results Summary of ANOVA on Yearly Averages
 3.  Table \@ref(tab:Tukey): Results Summary of Tukey's HSD on Yearly Averages
