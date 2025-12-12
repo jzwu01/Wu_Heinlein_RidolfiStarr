@@ -713,26 +713,6 @@ pH.yearly.plot
 plot_grid(pH.prevspost.plot, pH.yearly.plot,
           nrow=2,
           align = "v")
-
-#MK test on yearly ts
-P.mk <- mk.test(yearly.P.ts)
-N.mk <- mk.test(yearly.N.ts)
-O.mk <- mk.test(yearly.O.ts)
-pH.mk <- mk.test(yearly.pH.ts)
-
-mk.stat.summary <- 
-  c(P.mk$statistic,N.mk$statistic,O.mk$statistic,pH.mk$statistic)
-mk.pvalue.summary <-
-  c(P.mk$p.value,N.mk$p.value,O.mk$p.value,pH.mk$p.value)
-
-mk.summary <- data.frame(
-  "S.Stat" = mk.stat.summary,
-  "p.value" = mk.pvalue.summary,
-  row.names = c("Total_Phosphorous", "Total_Nitrogen", "Dissolved_O2", "pH"))
-
-kable(mk.summary,
-      digits=c(3,3),
-      caption="Results Summary of Mann Kendall Test on Yearly Averages")
 ```
 
 [insert description of yearly TS vs interpolated plots, MK results]
