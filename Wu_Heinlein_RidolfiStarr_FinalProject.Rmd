@@ -85,10 +85,11 @@ WQ_parameters_raw <- WQ_data_raw %>%
   mutate(SampleDate = ymd_hms(SampleDate),
          Group = ifelse(SampleDate < as.Date("2021-04-1"), "Pre", "Post"))
 
+#remove outliers from dissolved O2 and pH
 WQ_parameters_treated <- WQ_parameters_raw  %>%
   mutate(
     pH = ifelse(pH>15,NA,pH),
-    Dissolved_O2.fixed = ifelse(Dissolved_O2>700,NA,Dissolved_O2))
+    Dissolved_O2 = ifelse(Dissolved_O2>700,NA,Dissolved_O2))
 
 #monthly averages data frame (for time series)
 WQ_monthly_data <- WQ_parameters_treated %>%
@@ -191,24 +192,49 @@ parameter.summary <- data.frame(
   "Std_Deviation" = SDs)
 
 P.points <- ggplot() +
-  geom_point(data=WQ_parameters_treated, aes(x=SampleDate, y=Total_Phosphorous))
+  geom_point(data=WQ_parameters_raw, aes(x=SampleDate, y=Total_Phosphorous))+
+  labs(
+    y="Total Phosphorous (mg/L)")
 N.points <- ggplot() +
-  geom_point(data=WQ_parameters_treated, aes(x=SampleDate, y=Total_Nitrogen))
+  geom_point(data=WQ_parameters_raw, aes(x=SampleDate, y=Total_Nitrogen))+
+  labs(
+    y="Total Nitrogen (mg/L)")
 O.points <- ggplot() +
-  geom_point(data=WQ_parameters_treated, aes(x=SampleDate, y=Dissolved_O2))
+  geom_point(data=WQ_parameters_raw, aes(x=SampleDate, y=Dissolved_O2))+
+  labs(
+    y="Dissolved Oxygen (mg/L)",
+    x="Date")
 pH.points <- ggplot() +
-  geom_point(data=WQ_parameters_treated, aes(x=SampleDate, y=pH))
+  geom_point(data=WQ_parameters_raw, aes(x=SampleDate, y=pH))+
+  labs(
+    y="pH",
+    x="Date")
 
-plot_grid(P.points, N.points, O.points, pH.points, nrow=2, ncol=2)
+points.preview <- plot_grid(P.points, N.points, O.points, pH.points, nrow=2, ncol=2)
 ```
 
-Below are the raw data structure and a summary of the parameters examined in this project.
-```{r data structure, echo=FALSE, message=FALSE, warning=FALSE}
+[Insert dataset description]
+
+Below are the structure of the raw dataset used in this project and initial plots of parameter values.
+```{r data structure, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Water Quality Parameter Readings"}
 #displaying data
 
 #raw data structure
 str(WQ_data_raw)
+```
+\
+\
+```{r raw data points, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Water Quality Parameter Readings"}
+#show points 
+print(points.preview)
+```
+\
+\
+## Data Wrangling
 
+[insert wrangling description]
+
+```{r pivoted data info, echo=FALSE, message=FALSE, warning=FALSE}
 #paramter summary
 kable(
   parameter.summary,
@@ -216,11 +242,8 @@ kable(
   digits = c(1,1,4,4,3,3),
   caption = "Parameter Summary Statistics")
 ```
-
-## Data Wrangling
-
-[insert wrangling description]
-
+\
+\
 \newpage
 
 # Exploratory Analysis 
@@ -249,7 +272,7 @@ mapview(
 ```
 
 [insert description of study area, anything else relevant]
-
+\
 ## Monthly Averages
 
 Monthly averages of the study parameters are visualized below. The vertical dotted line represents the implementation of the Miami-Dade County summer fertilizer ordinance (April, 2021).
@@ -297,12 +320,11 @@ plot_grid(phosphorous.preview, nitrogen.preview, oxygen.preview, pH.preview, nro
 ```
 
 [insert description of above plots]
-
+\
 ## Yearly Averages
 
-Exploratory box plots showing the distribution of parameters of interest by year
-individually and as a combined plot 
-```{r boxplots, echo=FALSE, message=FALSE, warning=FALSE, fig.height=12, fig.cap="Distributions of Water Quality Parameter Values by Year}
+Exploratory box plots showing the distribution of parameters of interest by year individually and as a combined plot 
+```{r boxplots, echo=FALSE, message=FALSE, warning=FALSE, fig.height=12, fig.cap="Distributions of Water Quality Parameter Values by Year"}
 
 Total_Nitrogen_Distribution <- ggplot(WQ_monthly_complete,
             aes(x=Year,y=Mean_Total_N)
@@ -357,10 +379,11 @@ print(CombinedDistributionPlot)
 ```
 
 [insert description of boxplots]
-
+\
 \newpage
 
 # Analysis
+## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
 
 ```{r pre vs post TS, echo=FALSE, message=FALSE, warning=FALSE, fig.height=12, fig.cap="Comparing Pre- and Post-Ordinance Trends in Water Quality Parameters"}
 #time series
@@ -507,13 +530,13 @@ O.prevspost.plot <- ggplot() +
   geom_line(data=WQ_monthly_complete, aes(x=Date, y=Interp_Dissolved_O2)) +
   geom_line(data=O.pre.components, aes(x=date, y=trend), color="#005AB5") +
   geom_text(data=WQ_monthly_complete,
-            x=as.Date("2019-09-01"), y=75,
+            x=as.Date("2019-09-01"), y=45,
             label=paste0("SMK p-value = ",round(O.pre.smk$p.value, 3)), 
             color="#005AB5") +
   geom_line(data=O.post.components, aes(x=date, y=observed)) +
   geom_line(data=O.post.components, aes(x=date, y=trend), color="#DC3220") +
   geom_text(data=WQ_monthly_complete,
-            x=as.Date("2023-05-01"), y=75,
+            x=as.Date("2023-05-01"), y=45,
             label=paste0("SMK p-value = ", round(O.post.smk$p.value, 3)),
             color="#DC3220") +
   geom_vline(xintercept = as.Date("2021-04-01"), lty=2) +
@@ -564,7 +587,7 @@ pH.prevspost.plot <- ggplot() +
 plot_grid(P.prevspost.plot, N.prevspost.plot, O.prevspost.plot, pH.prevspost.plot,
           nrow=4)
 ```
-
+\
 ```{r SMK, echo=FALSE, message=FALSE, warning=FALSE}
 #pre vs post SMK results summary table
 pre.stat.summary <- c(P.pre.smk$statistic, N.pre.smk$statistic, 
@@ -713,8 +736,7 @@ kable(mk.summary,
 ```
 
 [insert description of yearly TS vs interpolated plots, MK results]
-
-## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
+\
 
 ```{r anova, echo=FALSE, message=FALSE, warning=FALSE}
 #ANOVA
@@ -777,8 +799,6 @@ kable(parameter.anova.groups,
       caption="Results Summary of Tukey's HSD Test on Yearly Averages")
 ```
 
-[insert ANOVA results]
-
 
 ## Question 2: 
 
@@ -788,8 +808,20 @@ kable(parameter.anova.groups,
 \newpage
 
 # Summary and Conclusions
+### Total Phosphorous
 
+\
+### Total Nitrogen
 
+\
+### Dissolved Oxygen
+
+\
+### pH
+
+### Summary
+
+\
 \newpage
 
 # References
