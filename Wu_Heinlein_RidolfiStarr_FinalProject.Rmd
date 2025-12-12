@@ -12,18 +12,24 @@ mainfont: Times New Roman
 editor_options: 
   chunk_output_type: console
 ---
+
+```{=tex}
 \newpage
 \tableofcontents 
 \newpage
-
+```
 ## List of Tables
+
 *Dataset Information*
 
-1. Table \@ref(tab:table1): Parameter Summary Statistics
-\listoftables 
-\newpage
-\listoffigures 
-\newpage
+1.  Table \@ref(tab:table1): Parameter Summary Statistics
+
+    ```{=tex}
+    \listoftables 
+    \newpage
+    \listoffigures 
+    \newpage
+    ```
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -59,12 +65,11 @@ WQ_data_raw <- read.csv(here("./Raw_Data/WQ_data.txt"), header = TRUE, sep = "|"
 
 ```
 
-
 # Rationale and Research Questions
-Urban coastal ecosystems are sensitive to stormwater runoff, which is rain water and waste water that flows over streets, sidewalks, and other surfaces. It picks up debris, oil, fertilizers, and other pollutants along the way before entering the stormwater system. The system is designed to drain cities of rain water and help minimize flooding. As a result, carries and deposits polluted runoff into surrounding waterways, causing harm to nearby ecossytems. Unfortunately, this is the case for Biscayne Bay near the City of Miami Beach. To address such issues, Miami-Dade County implemented an ordinance that prohibits the use of fertilizers containing nitrogen and phosphorus during the summer rainy season. The ordinance was passed in January, 2021, and was adopted in April of the same year. The ordinance is effective from May 15 through October 31 every year (accounting for raining season). 
 
-This study examines whether measurable changes in nutrient concentrations or related indicators appeared following the implementation of the Miami-Dade County fertilizer ordinance by using data from the City of Miami Beach Water Monitoring Program. The goal is to quantify these changes through time series and statistical analyses. We chose to look at this specific dataset because it includes measurements for multiple years, and it is specific to the location that we are looking to assess. It also measures parameters that are crucial to our analyses, such as total nitrogen, total phosphorus, dissolved oxygen, and pH. 
+Urban coastal ecosystems are sensitive to stormwater runoff, which is rain water and waste water that flows over streets, sidewalks, and other surfaces. It picks up debris, oil, fertilizers, and other pollutants along the way before entering the stormwater system. The system is designed to drain cities of rain water and help minimize flooding. As a result, carries and deposits polluted runoff into surrounding waterways, causing harm to nearby ecossytems. Unfortunately, this is the case for Biscayne Bay near the City of Miami Beach. To address such issues, Miami-Dade County implemented an ordinance that prohibits the use of fertilizers containing nitrogen and phosphorus during the summer rainy season. The ordinance was passed in January, 2021, and was adopted in April of the same year. The ordinance is effective from May 15 through October 31 every year (accounting for raining season).
 
+This study examines whether measurable changes in nutrient concentrations or related indicators appeared following the implementation of the Miami-Dade County fertilizer ordinance by using data from the City of Miami Beach Water Monitoring Program. The goal is to quantify these changes through time series and statistical analyses. We chose to look at this specific dataset because it includes measurements for multiple years, and it is specific to the location that we are looking to assess. It also measures parameters that are crucial to our analyses, such as total nitrogen, total phosphorus, dissolved oxygen, and pH.
 
 \newpage
 
@@ -224,17 +229,20 @@ pH.points <- ggplot() +
 points.preview <- plot_grid(P.points, N.points, O.points, pH.points, nrow=2, ncol=2)
 ```
 
-[Insert dataset description]
+The dataset was downloaded from the Florida Statewide Ecosystem Assessment of Coastal and Aquatic Resources (SEACAR) Data Discovery platform, [City of Miami Beach Water Monitoring](https://data.florida-seacar.org/programs/details/4058) program page (City of Miami Beach, 2024). The City of Miami Beach’s ongoing monitoring program began in 2016 and involves the collection of monthly surface-water grab samples, primarily at outfall locations where the city’s stormwater infrastructure discharges to Biscayne Bay. A reference map @ref(fig:map) of the sample locations included in this dataset is provided in the Exploratory Analysis section of the report. For each sample, the dataset includes analytical results for key nutrients, water clarity, and water quality parameters such as total phosphorous, total nitrogen, dissolved 02, pH, turbidity, salinity, and water temperature. The raw dataset includes 38 variables and 25,836 observations spanning August 2016 through December 2025. Additional information regarding the city’s sampling program and efforts to address water quality challenges in Biscayne Bay can be found at [Miami Beach Rising Above](https://www.mbrisingabove.com/climate-adaptation/biscayne-bay/water-quality/).
 
 Below are the structure of the raw dataset used in this project and initial plots of parameter values.
+
 ```{r data structure, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Water Quality Parameter Readings"}
 #displaying data
 
 #raw data structure
 str(WQ_data_raw)
 ```
+
 \
 \
+
 ```{r figure1, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Water Quality Parameter Readings"}
 #show points 
 print(points.preview)
@@ -253,10 +261,9 @@ kable(
   caption = "Table 1. Parameter Summary Statistics")
 ```
 
-
 \newpage
 
-# Exploratory Analysis 
+# Exploratory Analysis
 
 ## Geographic Context
 
@@ -281,11 +288,11 @@ mapview(
   )
 ```
 
-[insert description of study area, anything else relevant]
-\
-## Monthly Averages
+[insert description of study area, anything else relevant]\
+\## Monthly Averages
 
 Monthly averages of the study parameters are visualized below. The vertical dotted line represents the implementation of the Miami-Dade County summer fertilizer ordinance (April, 2021).
+
 ```{r preview plots, echo=FALSE, message=FALSE, warning=FALSE, fig.height=12, fig.cap="Monthly Averages of Water Quality Parameters"}
 #Exploring series
 
@@ -329,11 +336,13 @@ plot_grid(phosphorous.preview, nitrogen.preview, oxygen.preview, pH.preview, nro
 
 ```
 
-[insert description of above plots]
-\
-## Yearly Averages
+We began by creating line plots for each parameter, showing their monthly concentrations through time (Figure\@ref(fig:preview plots)). Each plot was fitted with a trend line and a vertical line indicated when the County’s fertilizer ordinance went into effect. Based on these plots, total phosphorous appears to be decreasing over the monitoring period and is the only parameter that shows a discernable trend. While total nitrogen, dissolved oxygen, and pH exhibit fluctuations in monthly values, these plots do not indicate trends in these parameters between 2016 and 2024. Plotting these values also exposed multiple data gaps in the series, with the most extensive occurring in 2022. This was an important finding with implications for time series analysis.
 
-Exploratory box plots showing the distribution of parameters of interest by year individually and as a combined plot 
+\
+\## Yearly Averages
+
+Exploratory box plots showing the distribution of parameters of interest by year individually and as a combined plot
+
 ```{r boxplots, echo=FALSE, message=FALSE, warning=FALSE, fig.height=12, fig.cap="Distributions of Water Quality Parameter Values by Year"}
 
 Total_Nitrogen_Distribution <- ggplot(WQ_monthly_complete,
@@ -388,16 +397,14 @@ CombinedDistributionPlot <- plot_grid(
 print(CombinedDistributionPlot)
 ```
 
-[insert description of boxplots]
-\
+In addition to the preliminary exploration of trends in the data, we also used boxplots to visualize the annual distributions of each parameter (Figure \@ref(fig:boxplots)). The plots for total nitrogen are relatively consistent in spread, with median concentration values around 0.50 mg/L. The distributions for total phosphorous appear similar between 2016-2020, with a noticeable decrease beginning in 2021 through 2024. Dissolved oxygen appears to be narrowly and similarly distributed across all year excluding 2017 during which the interquartile range (IQR) is more varied. Finally, the boxplots for pH are also narrow and do not appear to meaningfully differ year to year. Many of the annual distributions shown in Figure \@ref(fig:boxplots) include outliers.\
 \newpage
 
 # Analysis
+
 ## Question 1: How do the pre- and post-ordinance trends in monthly averages compare in terms of A) Total Phosphorous, B) Total Nitrogen, C) Dissolved Oxygen, and D) pH?
 
-
-###	Pre- vs. Post-Ordinance Monthly Trend Analysis
-
+### Pre- vs. Post-Ordinance Monthly Trend Analysis
 
 ```{r pre vs post TS, echo=FALSE, message=FALSE, warning=FALSE, fig.height=12, fig.cap="Comparing Pre- and Post-Ordinance Trends in Water Quality Parameters"}
 #time series
@@ -601,7 +608,9 @@ pH.prevspost.plot <- ggplot() +
 plot_grid(P.prevspost.plot, N.prevspost.plot, O.prevspost.plot, pH.prevspost.plot,
           nrow=4)
 ```
+
 \
+
 ```{r SMK, echo=FALSE, message=FALSE, warning=FALSE}
 #pre vs post SMK results summary table
 pre.stat.summary <- c(P.pre.smk$statistic, N.pre.smk$statistic, 
@@ -626,14 +635,14 @@ kable(prevspost.SMK.summary,
       caption="Results Summary of Pre- and Post-Ordinance Monthly Averages")
 ```
 
-We conducted monthly time series analysis of the various parameters to assess whether monotonic trends differed before and after the implementation of the ordinance. The dashed vertical line in these plots represent the ordinance implementation time. Seasonal Mann-Kendall (SMK) tests were applied separately to pre- and post-ordinance periods to evaluate the presence of statistically significant monotonic trends while accounting for seasonality (Figure xx).   
+We conducted monthly time series analysis of the various parameters to assess whether monotonic trends differed before and after the implementation of the ordinance. The dashed vertical line in these plots represent the ordinance implementation time. Seasonal Mann-Kendall (SMK) tests were applied separately to pre- and post-ordinance periods to evaluate the presence of statistically significant monotonic trends while accounting for seasonality (Figure xx).
 
-Time series analysis reveals statistically significant, downward monotonic trends in post-ordinance Total Phosphorous (SMK; z < 0, p-value < 0.05) and pH (SMK; z < 0, p-value < 0.05). For both parameters, no significant trend was observed prior to the ordinance implementation. For the other two parameters, dissolved oxygen and pH, plotted time series trends show some variability, but no pre- or post-ordinance variables showed significant monotonic trends. SMK results for all parameters are summarized in Table __.
+Time series analysis reveals statistically significant, downward monotonic trends in post-ordinance Total Phosphorous (SMK; z \< 0, p-value \< 0.05) and pH (SMK; z \< 0, p-value \< 0.05). For both parameters, no significant trend was observed prior to the ordinance implementation. For the other two parameters, dissolved oxygen and pH, plotted time series trends show some variability, but no pre- or post-ordinance variables showed significant monotonic trends. SMK results for all parameters are summarized in Table \_\_.
 
+### Comparison of Monthly and Yearly Trends
 
-###	Comparison of Monthly and Yearly Trends
+To assess whether the interpolated monthly observation reflect accurate description of the data, we created plots that show trend of the yearly mean value for the different parameters between 2016 and 2025 (Figure xx). For all parameters, yearly averages maintained the direction and relative magnitude of post-ordinance changes observed earlier in the monthly data.
 
-To assess whether the interpolated monthly observation reflect accurate description of the data, we created plots that show trend of the yearly mean value for the different parameters between 2016 and 2025 (Figure xx).  For all parameters, yearly averages maintained the direction and relative magnitude of post-ordinance changes observed earlier in the monthly data.
 ```{r yearly vs monthly TS, echo=FALSE, message=FALSE, warning=FALSE}
 #yearly TS with combined plots
 par(mfrow = c(2,2))
@@ -735,11 +744,9 @@ plot_grid(pH.prevspost.plot, pH.yearly.plot,
 
 To compare the results in a more visual way, we stacked the monthly and yearly plots to assess their trends for each of the parameters. For all four parameters, the monthly and yearly plots seem to follow similar trends. The yearly mean total phosphorus concentrations show a clear decline beginning in 2021, which is consistent with the significant post-ordinance monotonic trend we identified earlier in monthly analyses. The yearly mean total nitrogen presented larger variability regarding trends throughout the years, but its general trend had a declining direction after 2021. The yearly mean dissolved oxygen had large spikes during the early times and showed limited differentiation after ordinance implementation, while the yearly mean pH showed a modest decline following 2021.
 
-The similar plot patterns between the monthly and yearly time series suggest that the observed post-ordinance declines in phosphorous and pH are consistent across time scales, while nitrogen and dissolved oxygen show high variability in both datasets. 
+The similar plot patterns between the monthly and yearly time series suggest that the observed post-ordinance declines in phosphorous and pH are consistent across time scales, while nitrogen and dissolved oxygen show high variability in both datasets.
 
-
-
-## Question 2: Are there significant differences among the yearly averages for A) Total Phosphorous, B) Total Nitrogen, C) Dissolved Oxygen, and D) pH? 
+## Question 2: Are there significant differences among the yearly averages for A) Total Phosphorous, B) Total Nitrogen, C) Dissolved Oxygen, and D) pH?
 
 ```{r anova, echo=FALSE, message=FALSE, warning=FALSE}
 #ANOVA
@@ -802,28 +809,26 @@ kable(parameter.anova.groups,
       caption="Results Summary of Tukey's HSD Test on Yearly Averages")
 ```
 
-One-way analysis of variance (ANOVA) was performed on the four study parameters using year as a categorical variable to calculate means. Analysis of Total Phosphorous (df = 8, F = 36.18, p < 0.00001) and Total Nitrogen (df = 8, F = 3.554, p < 0.005) found statistically significant differences among the yearly means for both parameters. There were no statistically significant differences among yearly means for Dissolved Oxygen (df = 8, F = 1.04, p = 0.413) or pH (df = 8, F = 1.648, p = 0.124). 
+One-way analysis of variance (ANOVA) was performed on the four study parameters using year as a categorical variable to calculate means. Analysis of Total Phosphorous (df = 8, F = 36.18, p \< 0.00001) and Total Nitrogen (df = 8, F = 3.554, p \< 0.005) found statistically significant differences among the yearly means for both parameters. There were no statistically significant differences among yearly means for Dissolved Oxygen (df = 8, F = 1.04, p = 0.413) or pH (df = 8, F = 1.648, p = 0.124).
 
-These results indicate that there are relatively stronger shifts between years in nutrient concentrations, particularly for phosphorous. On the other hand, physical water quality parameters presented weaker and more variable year-to-year differentiation. 
+These results indicate that there are relatively stronger shifts between years in nutrient concentrations, particularly for phosphorous. On the other hand, physical water quality parameters presented weaker and more variable year-to-year differentiation.
 
-Following ANOVA, Tukey’s honestly significant difference test (HSD) was used to identify years with diverging means across variables. The results are summarized in Table __. Yearly Total Phosphorous means were more stratified, with seven years belonging to single, distinct mean groups. One statistically unique mean group occurs only before 2021, a second occurs only during 2021, and a third occurs only afterward. Total Nitrogen also showed statistically distinct mean groups occurring before and after 2021 but had less separation overall. Both parameters showed less separation among mean groups in 2017 and 2018. For dissolved oxygen and pH, the results indicated substantial overlap among yearly mean groups, which reinforce the earlier ANOVA results that suggested limited year-to-year differences for these parameters. 
-
-
-
+Following ANOVA, Tukey’s honestly significant difference test (HSD) was used to identify years with diverging means across variables. The results are summarized in Table \_\_. Yearly Total Phosphorous means were more stratified, with seven years belonging to single, distinct mean groups. One statistically unique mean group occurs only before 2021, a second occurs only during 2021, and a third occurs only afterward. Total Nitrogen also showed statistically distinct mean groups occurring before and after 2021 but had less separation overall. Both parameters showed less separation among mean groups in 2017 and 2018. For dissolved oxygen and pH, the results indicated substantial overlap among yearly mean groups, which reinforce the earlier ANOVA results that suggested limited year-to-year differences for these parameters.
 
 \newpage
 
 # Summary and Conclusions
+
 ### Total Phosphorous
 
 \
-### Total Nitrogen
+\### Total Nitrogen
 
 \
-### Dissolved Oxygen
+\### Dissolved Oxygen
 
 \
-### pH
+\### pH
 
 ### Summary
 
@@ -831,5 +836,5 @@ Following ANOVA, Tukey’s honestly significant difference test (HSD) was used t
 \newpage
 
 # References
-<add references here if relevant, otherwise delete this section> 
-https://data.florida-seacar.org/programs/details/4058 
+
+1.  City of Miami Beach. (2024). City of Miami Beach Water Monitoring. Updated 04/09/2025. Distributed by: SEACAR Data Discovery Interface, Office of Resilience and Coastal Protection, Florida Department of Environmental Protection. <https://data.florida-seacar.org/programs/details/4058>
