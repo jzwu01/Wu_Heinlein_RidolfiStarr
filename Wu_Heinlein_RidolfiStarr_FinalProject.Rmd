@@ -21,8 +21,11 @@ editor_options:
 ## List of Tables
 
 *Dataset Information*
-
 1.  Table \@ref(tab:table1): Parameter Summary Statistics
+*Analysis*
+2.  Table \@ref(tab:SMK): Results Summary of SMK on Pre- and Post-Ordinance Monthly Averages
+3.  Table \@ref(tab:anova): Results Summary of ANOVA on Yearly Averages
+3.  Table \@ref(tab:Tukey): Results Summary of Tukey's HSD on Yearly Averages
 
     ```{=tex}
     \listoftables 
@@ -67,9 +70,9 @@ WQ_data_raw <- read.csv(here("./Raw_Data/WQ_data.txt"), header = TRUE, sep = "|"
 
 # Rationale and Research Questions
 
-Urban coastal ecosystems are sensitive to stormwater runoff, which is rain water and waste water that flows over streets, sidewalks, and other surfaces. It picks up debris, oil, fertilizers, and other pollutants along the way before entering the stormwater system. The system is designed to drain cities of rain water and help minimize flooding. As a result, carries and deposits polluted runoff into surrounding waterways, causing harm to nearby ecossytems. Unfortunately, this is the case for Biscayne Bay near the City of Miami Beach. To address such issues, Miami-Dade County implemented an ordinance that prohibits the use of fertilizers containing nitrogen and phosphorus during the summer rainy season. The ordinance was passed in January, 2021, and was adopted in April of the same year. The ordinance is effective from May 15 through October 31 every year (accounting for raining season).
+Urban coastal ecosystems are sensitive to stormwater runoff, which is rain water and waste water that flows over streets, sidewalks, and other surfaces. It picks up debris, oil, fertilizers, and other pollutants along the way before entering the stormwater system. The system is designed to drain cities of rain water and help minimize flooding. As a result, it carries and deposits polluted runoff into surrounding waterways, causing harm to nearby ecosystems. Unfortunately, this is the case for Biscayne Bay near the City of Miami Beach. To address such issues, Miami-Dade County implemented an ordinance that prohibits the use of fertilizers containing nitrogen and phosphorus during the summer rainy season. The ordinance was passed in January, 2021, and was adopted in April of the same year. The ordinance is effective from May 15 through October 31 every year (accounting for raining season).
 
-This study examines whether measurable changes in nutrient concentrations or related indicators appeared following the implementation of the Miami-Dade County fertilizer ordinance by using data from the City of Miami Beach Water Monitoring Program. The goal is to quantify these changes through time series and statistical analyses. We chose to look at this specific dataset because it includes measurements for multiple years, and it is specific to the location that we are looking to assess. It also measures parameters that are crucial to our analyses, such as total nitrogen, total phosphorus, dissolved oxygen, and pH.
+This study examines whether measurable changes in nutrient concentrations or related indicators appeared following the implementation of the Miami-Dade County fertilizer ordinance by using data from the City of Miami Beach Water Monitoring Program. The goal is to quantify these changes through time series and statistical analyses. We chose to look at this specific dataset because it includes measurements for multiple years, and it is specific to the location that we are looking to assess. It also measures parameters that are crucial to our analyses: total nitrogen, total phosphorus, dissolved oxygen, and pH. We 
 
 \newpage
 
@@ -258,7 +261,7 @@ kable(
   parameter.summary,
   align = c("l","c","r","r","r","r"),
   digits = c(1,1,4,4,3,3),
-  caption = "Table 1. Parameter Summary Statistics")
+  caption = "Parameter Summary Statistics")
 ```
 
 \newpage
@@ -341,7 +344,7 @@ We began by creating line plots for each parameter, showing their monthly concen
 \
 \## Yearly Averages
 
-Exploratory box plots showing the distribution of parameters of interest by year individually and as a combined plot
+Exploratory box plots showing the distribution of study parameter values by year.
 
 ```{r boxplots, echo=FALSE, message=FALSE, warning=FALSE, fig.height=12, fig.cap="Distributions of Water Quality Parameter Values by Year"}
 
@@ -632,16 +635,16 @@ prevspost.SMK.summary <- data.frame(
 #smk summary table
 kable(prevspost.SMK.summary, 
       digits=c(3,3,3,3),
-      caption="Results Summary of Pre- and Post-Ordinance Monthly Averages")
+      caption="Results Summary of SMK on Pre- and Post-Ordinance Monthly Averages")
 ```
 
-We conducted monthly time series analysis of the various parameters to assess whether monotonic trends differed before and after the implementation of the ordinance. The dashed vertical line in these plots represent the ordinance implementation time. Seasonal Mann-Kendall (SMK) tests were applied separately to pre- and post-ordinance periods to evaluate the presence of statistically significant monotonic trends while accounting for seasonality (Figure xx).
+We conducted a monthly time series analysis of the four study parameters to assess whether monotonic trends differed before and after the implementation of the ordinance. The dashed vertical line in these plots represents implementation of the ordinance. Seasonal Mann-Kendall (SMK) tests were applied separately to pre- and post-ordinance periods to evaluate the presence of statistically significant monotonic trends while accounting for seasonality (Figure xx).
 
-Time series analysis reveals statistically significant, downward monotonic trends in post-ordinance Total Phosphorous (SMK; z \< 0, p-value \< 0.05) and pH (SMK; z \< 0, p-value \< 0.05). For both parameters, no significant trend was observed prior to the ordinance implementation. For the other two parameters, dissolved oxygen and pH, plotted time series trends show some variability, but no pre- or post-ordinance variables showed significant monotonic trends. SMK results for all parameters are summarized in Table \_\_.
+Time series analysis reveals statistically significant, downward monotonic trends in post-ordinance Total Phosphorous (SMK; z \< 0, p-value \< 0.05) and post-ordinance pH (SMK; z \< 0, p-value \< 0.05). For both parameters, no significant trend was observed prior to the ordinance implementation. For the other two parameters, Total Nitrogen and Dissolved Oxygen, plotted time series trends show some variability, but no significant monotonic trends before or after the ordinance. SMK results for all parameters are summarized in Table \_\_.
 
 ### Comparison of Monthly and Yearly Trends
 
-To assess whether the interpolated monthly observation reflect accurate description of the data, we created plots that show trend of the yearly mean value for the different parameters between 2016 and 2025 (Figure xx). For all parameters, yearly averages maintained the direction and relative magnitude of post-ordinance changes observed earlier in the monthly data.
+To assess whether the interpolated monthly averages reflect a reasonable description of the missing observations, we created plots that show trends of the yearly mean values for the different parameters between 2016 and 2025 without interpolation (Figure xx). For all parameters, yearly averages maintained the direction and relative magnitude of post-ordinance changes observed earlier in the monthly data.
 
 ```{r yearly vs monthly TS, echo=FALSE, message=FALSE, warning=FALSE}
 #yearly TS with combined plots
@@ -787,50 +790,65 @@ anova.results <- anova.results %>%
 kable(anova.results,
       row.names = T,
       digits = c(1,1,3,3,3,5),
-      caption="Summary of ANOVA Results")
+      caption="Results Summary of ANOVA on Yearly Averages")
+```
 
+One-way analysis of variance (ANOVA) was performed on the four study parameters using year as a categorical variable to calculate means (without interpolation). Analysis of Total Phosphorous (df = 8, F = 36.18, p \< 0.00001), Total Nitrogen (df = 8, F = 3.554, p \< 0.005), and Dissolved Oxygen (df = 8, F = 2.61, p \< 0.05) found statistically significant differences among the yearly means. There were no statistically significant differences among yearly means for pH (df = 8, F = 1.86, p = 0.078). These results indicate that there are relatively stronger shifts between years in average total phosphorous, total nitrogen, and dissolved oxygen compared to pH.
+
+Following ANOVA, Tukey’s honestly significant difference test (HSD) was used to identify years with diverging means across variables. The pH parameter was omitted from this test to avoid type I error, since ANOVA failed to produce a statistically significant result. HSD results are summarized in Table \_\_. 
+
+```{r Tukey, echo=FALSE, message=FALSE, warning=FALSE}
 #HSD results into table
 P.groups <- as.data.frame(P.HSD$groups)
+P.groups <- P.groups[order(rownames(P.groups)),]
 N.groups <- as.data.frame(N.HSD$groups)
+N.groups <- N.groups[order(rownames(N.groups)),]
 O.groups <- as.data.frame(O.HSD$groups)
-pH.groups <- as.data.frame(pH.HSD$groups)
+O.groups <- O.groups[order(rownames(O.groups)),]
+#pH.groups <- as.data.frame(pH.HSD$groups)
+#pH.groups <- pH.groups[order(rownames(pH.groups)),]
 
 parameter.anova.groups <- data.frame(
   "Phosphorous" = P.groups,
   "Nitrogen" = N.groups,
-  "Dissolved_O2"= O.groups,
-  "pH" = pH.groups)
+  "Dissolved_O2"= O.groups)
+  #"pH" = pH.groups)
 
 kable(parameter.anova.groups,
-      col.names=c("Year","Phosphorous_Mean","P_Group","Nitrogen_Mean","N_Group",
-                  "Diss_O2_Mean","O2_Group","pH_Mean","pH_Group"),
+      col.names=c("Year",
+                  "Phosphorous_Mean","P_Group",
+                  "Nitrogen_Mean","N_Group",
+                  "Diss_O2_Mean","O2_Group"),
+                  #"pH_Mean","pH_Group"),
             align=c("r","c","r","c","r","c","r","c"),
-      digits=c(3,1,3,1,3,1,3,1,3),
-      caption="Results Summary of Tukey's HSD Test on Yearly Averages")
+      digits=c(3,1,3,1,3,1,3),
+      caption="Results Summary of Tukey's HSD on Yearly Averages")
 ```
 
-One-way analysis of variance (ANOVA) was performed on the four study parameters using year as a categorical variable to calculate means. Analysis of Total Phosphorous (df = 8, F = 36.18, p \< 0.00001) and Total Nitrogen (df = 8, F = 3.554, p \< 0.005) found statistically significant differences among the yearly means for both parameters. There were no statistically significant differences among yearly means for Dissolved Oxygen (df = 8, F = 1.04, p = 0.413) or pH (df = 8, F = 1.648, p = 0.124).
+Yearly Total Phosphorous means are more uniquely identified, with seven years belonging to single mean groups. Among these years, the highest statistically unique mean group (a) occurs only before 2021, an intermediate one (b) occurs during 2021, and the lowest (c) occurs only afterward. This provides strong evidence that phosphorous levels started decreasing in 2021. 
 
-These results indicate that there are relatively stronger shifts between years in nutrient concentrations, particularly for phosphorous. On the other hand, physical water quality parameters presented weaker and more variable year-to-year differentiation.
+Total Nitrogen also showed statistically distinct mean groups, but with no discernible relationship to implementation of the ordinance. Both the highest and lowest mean groups (a, c) occurred alone only before the ordinance. Significant differences in average nitrogen levels is likely due to external factors. 
 
-Following ANOVA, Tukey’s honestly significant difference test (HSD) was used to identify years with diverging means across variables. The results are summarized in Table \_\_. Yearly Total Phosphorous means were more stratified, with seven years belonging to single, distinct mean groups. One statistically unique mean group occurs only before 2021, a second occurs only during 2021, and a third occurs only afterward. Total Nitrogen also showed statistically distinct mean groups occurring before and after 2021 but had less separation overall. Both parameters showed less separation among mean groups in 2017 and 2018. For dissolved oxygen and pH, the results indicated substantial overlap among yearly mean groups, which reinforce the earlier ANOVA results that suggested limited year-to-year differences for these parameters.
+Dissolved oxygen has one uniquely high mean group (a) that occurred in 2017. This result indicates an anomalous average in 2017, not a trend over time. 
+
+With the exception of the anomalous dissolved oxygen average, these results suggest that nutrient levels show greater fluctuation across years than the physical water quality parameters examined. 
 
 \newpage
 
 # Summary and Conclusions
 
-### Total Phosphorous
+## Total Phosphorous
 
 \
-\### Total Nitrogen
+\## Total Nitrogen
 
 \
-\### Dissolved Oxygen
+\## Dissolved Oxygen
 
 \
-\### pH
+\## pH
 
-### Summary
+## Overall
 
 \
 \newpage
