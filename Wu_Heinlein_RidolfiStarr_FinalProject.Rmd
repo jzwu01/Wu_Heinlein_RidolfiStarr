@@ -278,13 +278,20 @@ str(WQ_data_raw)
 #show points 
 print(points.preview)
 ```
-[say something here; maybe about outliers]
+
+Unprocessed observations were plotted in Figure \@ref(fig:points) to identify extreme outliers. Several impossible values are evident in the dissolved oxygen and pH data. 
 
 \
 
 ## Data Wrangling
 
-[insert wrangling description]
+The imported data frame was first adjusted to include only the following columns: SampleDate, ParameterName, ResultValue, Year, Month, ProgramLocationID, OriginalLatitutude, and OriginalLongitude. Observations were then grouped by date and averaged to consolidate multiple readings occurring over a single day. Distinct parameters from the ParameterName column were then pivoted into their own columns with corresponding values from the ResultValue column. A new factor column was created to indicate whether an observation occurred before or after the April 2021 summer fertilizer ordinance.  
+
+Extreme outliers representing impossible values (dissolved oxygen \> 1000 and pH \> 15) were identified visually using Figure \@ref(fig:points) and replaced with NA values. The remaining data likely still contain less-extreme outliers. 
+
+For a monthly time series analysis, the daily parameter readings were grouped by month and averaged. The resulting monthly averages were joined to a continuous sequence of months spanning the timeframe of the dataset to identify missing observations in preparation for interpolation. Linear interpolation was performed before subsetting into two data frames of pre- and post-ordinance observations.  
+
+To assess yearly averages, the daily parameter readings were grouped by year and averaged. 
 
 ```{r table1, echo=FALSE, message=FALSE, warning=FALSE}
 #parameter summary
@@ -294,6 +301,8 @@ kable(
   digits = c(1,1,4,4,3,3),
   caption = "Parameter Summary Statistics")
 ```
+
+Descriptive statistics of the study parameters (with extreme outliers removed) are summarized in Table \@ref(tab:table1).
 
 ---
 
@@ -324,12 +333,13 @@ mapview(
   )
 ```
 
-[insert description of study area, anything else relevant]\
+Water quality samples included in this dataset were collected within, or in waters adjacent to the Biscayne Bay, an estuary system that includes Florida state-designated aquatic preserves, and both a national park and marine sanctuary. Historically an oligotrophic (low nutrients) water body, the Bay has undergone increasing eutrophication in recent time due to a variety of factors including upland development and water management. Eutrophication is negatively impacting both the water and habitat quality of the Bay (Miami-Dade County, 2019). Miami Beach’s water quality monitoring sample locations are mainly within the Southern North Bay region of Biscayne Bay. According to the Miami-Dade County Biscayne Bay Report Card, this region has consistently received a grade of “poor”, indicating that there is “considerable water quality and/or ecological degradation” (Miami-Dade County, 2025).
+
 \
 
 ## Monthly Averages
 
-```{r previewplots, echo=FALSE, message=FALSE, warning=FALSE, fig.height=11, fig.cap="Monthly Averages of Water Quality Parameters"}
+```{r previewplots, echo=FALSE, message=FALSE, warning=FALSE, fig.height=10, fig.cap="Monthly Averages of Water Quality Parameters"}
 #Exploring series
 
 phosphorous.preview <- ggplot(WQ_monthly_complete,
@@ -433,6 +443,9 @@ print(CombinedDistributionPlot)
 ```
 
 In addition to the preliminary exploration of trends in the data, we also used boxplots to visualize the annual distributions of each parameter (Figure \@ref(fig:boxplots)). The plots for total nitrogen are relatively consistent in spread, with median concentration values around 0.50 mg/L. The distributions for total phosphorous appear similar between 2016-2020, with a noticeable decrease beginning in 2021 through 2024. Dissolved oxygen appears to be narrowly and similarly distributed across all year excluding 2017 during which the interquartile range (IQR) is more varied. Finally, the boxplots for pH are also narrow and do not appear to meaningfully differ year to year. Many of the annual distributions shown in Figure \@ref(fig:boxplots) include outliers.\
+
+---
+
 \newpage
 
 # Analysis
@@ -840,8 +853,6 @@ kable(anova.results,
 
 One-way analysis of variance (ANOVA) was performed on the four study parameters using year as a categorical variable to calculate means (without interpolation). Analysis of Total Phosphorous (df = 8, F = 36.18, p \< 0.00001), Total Nitrogen (df = 8, F = 3.554, p \< 0.005), and Dissolved Oxygen (df = 8, F = 2.61, p \< 0.05) found statistically significant differences among the yearly means. There were no statistically significant differences among yearly means for pH (df = 8, F = 1.86, p = 0.078). These results indicate that there are relatively stronger shifts between years in average total phosphorous, total nitrogen, and dissolved oxygen compared to pH.
 
-Following ANOVA, Tukey’s honestly significant difference test (HSD) was used to identify years with diverging means across variables. The pH parameter was omitted from this test to avoid type I error, since ANOVA failed to produce a statistically significant result. HSD results are summarized in Table \@ref(tab:Tukey). 
-
 ```{r Tukey, echo=FALSE, message=FALSE, warning=FALSE}
 #HSD results into table
 P.groups <- as.data.frame(P.HSD$groups)
@@ -870,6 +881,8 @@ kable(parameter.anova.groups,
       caption="Results Summary of Tukey's HSD on Yearly Averages")
 ```
 
+Following ANOVA, Tukey’s honestly significant difference test (HSD) was used to identify years with diverging means across variables. The pH parameter was omitted from this test to avoid type I error, since ANOVA failed to produce a statistically significant result. HSD results are summarized in Table \@ref(tab:Tukey). 
+
 Yearly Total Phosphorous means are more uniquely identified, with seven years belonging to single mean groups. Among these years, the highest statistically unique mean group (a) occurs only before 2021, an intermediate one (b) occurs during 2021, and the lowest (c) occurs only afterward. This provides strong evidence that phosphorous levels started decreasing in 2021. 
 
 Total Nitrogen also showed statistically distinct mean groups, but with no discernible relationship to implementation of the ordinance. Both the highest and lowest mean groups (a, c) occurred alone only before the ordinance. Significant differences in average nitrogen levels is likely due to external factors. 
@@ -877,6 +890,8 @@ Total Nitrogen also showed statistically distinct mean groups, but with no disce
 Dissolved oxygen has one uniquely high mean group (a) that occurred in 2017. This result indicates an anomalous average in 2017, not a trend over time. 
 
 With the exception of the anomalous dissolved oxygen average, these results suggest that nutrient levels show greater fluctuation across years than the physical water quality parameters examined. 
+
+---
 
 \newpage
 
@@ -905,6 +920,9 @@ With the exception of the anomalous dissolved oxygen average, these results sugg
 ## Overall
 
 \
+
+----
+
 \newpage
 
 # References
