@@ -4,20 +4,29 @@ author: "Dashiell Ridolfi-Starr & Joy Wu & Jordan Heinlein"
 date: "Fall 2025"
  
 output:
-  html_document:
+  bookdown::html_document2:
     toc: TRUE
+    fig_caption: yes
+    lof: true
+mainfont: Times New Roman
 editor_options: 
   chunk_output_type: console
 ---
 \newpage
 \tableofcontents 
 \newpage
+
+## List of Tables
+*Dataset Information*
+
+1. Table \@ref(tab:table1): Parameter Summary Statistics
 \listoftables 
 \newpage
 \listoffigures 
 \newpage
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
 
 # Load packages
 library(tidyverse) 
@@ -33,7 +42,7 @@ library(agricolae)
 library(knitr)
 
 # Set working directory
-
+#here()
 # Set ggplot theme
 mytheme <- theme_classic(base_size = 11) +
   theme(axis.text = element_text(color = "black"),
@@ -194,10 +203,12 @@ parameter.summary <- data.frame(
 P.points <- ggplot() +
   geom_point(data=WQ_parameters_raw, aes(x=SampleDate, y=Total_Phosphorous))+
   labs(
+    x= "Date",
     y="Total Phosphorous (mg/L)")
 N.points <- ggplot() +
   geom_point(data=WQ_parameters_raw, aes(x=SampleDate, y=Total_Nitrogen))+
   labs(
+    x="Date",
     y="Total Nitrogen (mg/L)")
 O.points <- ggplot() +
   geom_point(data=WQ_parameters_raw, aes(x=SampleDate, y=Dissolved_O2))+
@@ -224,26 +235,25 @@ str(WQ_data_raw)
 ```
 \
 \
-```{r raw data points, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Water Quality Parameter Readings"}
+```{r figure1, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Water Quality Parameter Readings"}
 #show points 
 print(points.preview)
 ```
-\
-\
+
 ## Data Wrangling
 
 [insert wrangling description]
 
-```{r pivoted data info, echo=FALSE, message=FALSE, warning=FALSE}
+```{r table1, echo=FALSE, message=FALSE, warning=FALSE}
 #paramter summary
 kable(
   parameter.summary,
   align = c("l","c","r","r","r","r"),
   digits = c(1,1,4,4,3,3),
-  caption = "Parameter Summary Statistics")
+  caption = "Table 1. Parameter Summary Statistics")
 ```
-\
-\
+
+
 \newpage
 
 # Exploratory Analysis 
@@ -383,7 +393,11 @@ print(CombinedDistributionPlot)
 \newpage
 
 # Analysis
-## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
+## Question 1: How do the pre- and post-ordinance trends in monthly averages compare in terms of A) Total Phosphorous, B) Total Nitrogen, C) Dissolved Oxygen, and D) pH?
+
+
+###	Pre- vs. Post-Ordinance Monthly Trend Analysis
+
 
 ```{r pre vs post TS, echo=FALSE, message=FALSE, warning=FALSE, fig.height=12, fig.cap="Comparing Pre- and Post-Ordinance Trends in Water Quality Parameters"}
 #time series
@@ -612,9 +626,14 @@ kable(prevspost.SMK.summary,
       caption="Results Summary of Pre- and Post-Ordinance Monthly Averages")
 ```
 
-[insert description of TS plots & SMK results]
+We conducted monthly time series analysis of the various parameters to assess whether monotonic trends differed before and after the implementation of the ordinance. The dashed vertical line in these plots represent the ordinance implementation time. Seasonal Mann-Kendall (SMK) tests were applied separately to pre- and post-ordinance periods to evaluate the presence of statistically significant monotonic trends while accounting for seasonality (Figure xx).   
+
+Time series analysis reveals statistically significant, downward monotonic trends in post-ordinance Total Phosphorous (SMK; z < 0, p-value < 0.05) and pH (SMK; z < 0, p-value < 0.05). For both parameters, no significant trend was observed prior to the ordinance implementation. For the other two parameters, dissolved oxygen and pH, plotted time series trends show some variability, but no pre- or post-ordinance variables showed significant monotonic trends. SMK results for all parameters are summarized in Table __.
 
 
+###	Comparison of Monthly and Yearly Trends
+
+To assess whether the interpolated monthly observation reflect accurate description of the data, we created plots that show trend of the yearly mean value for the different parameters between 2016 and 2025 (Figure xx).  For all parameters, yearly averages maintained the direction and relative magnitude of post-ordinance changes observed earlier in the monthly data.
 ```{r yearly vs monthly TS, echo=FALSE, message=FALSE, warning=FALSE}
 #yearly TS with combined plots
 par(mfrow = c(2,2))
@@ -714,8 +733,13 @@ plot_grid(pH.prevspost.plot, pH.yearly.plot,
           align = "v")
 ```
 
-[insert description of yearly TS vs interpolated plots, MK results]
-\
+To compare the results in a more visual way, we stacked the monthly and yearly plots to assess their trends for each of the parameters. For all four parameters, the monthly and yearly plots seem to follow similar trends. The yearly mean total phosphorus concentrations show a clear decline beginning in 2021, which is consistent with the significant post-ordinance monotonic trend we identified earlier in monthly analyses. The yearly mean total nitrogen presented larger variability regarding trends throughout the years, but its general trend had a declining direction after 2021. The yearly mean dissolved oxygen had large spikes during the early times and showed limited differentiation after ordinance implementation, while the yearly mean pH showed a modest decline following 2021.
+
+The similar plot patterns between the monthly and yearly time series suggest that the observed post-ordinance declines in phosphorous and pH are consistent across time scales, while nitrogen and dissolved oxygen show high variability in both datasets. 
+
+
+
+## Question 2: Are there significant differences among the yearly averages for A) Total Phosphorous, B) Total Nitrogen, C) Dissolved Oxygen, and D) pH? 
 
 ```{r anova, echo=FALSE, message=FALSE, warning=FALSE}
 #ANOVA
@@ -778,8 +802,11 @@ kable(parameter.anova.groups,
       caption="Results Summary of Tukey's HSD Test on Yearly Averages")
 ```
 
+One-way analysis of variance (ANOVA) was performed on the four study parameters using year as a categorical variable to calculate means. Analysis of Total Phosphorous (df = 8, F = 36.18, p < 0.00001) and Total Nitrogen (df = 8, F = 3.554, p < 0.005) found statistically significant differences among the yearly means for both parameters. There were no statistically significant differences among yearly means for Dissolved Oxygen (df = 8, F = 1.04, p = 0.413) or pH (df = 8, F = 1.648, p = 0.124). 
 
-## Question 2: 
+These results indicate that there are relatively stronger shifts between years in nutrient concentrations, particularly for phosphorous. On the other hand, physical water quality parameters presented weaker and more variable year-to-year differentiation. 
+
+Following ANOVA, Tukey’s honestly significant difference test (HSD) was used to identify years with diverging means across variables. The results are summarized in Table __. Yearly Total Phosphorous means were more stratified, with seven years belonging to single, distinct mean groups. One statistically unique mean group occurs only before 2021, a second occurs only during 2021, and a third occurs only afterward. Total Nitrogen also showed statistically distinct mean groups occurring before and after 2021 but had less separation overall. Both parameters showed less separation among mean groups in 2017 and 2018. For dissolved oxygen and pH, the results indicated substantial overlap among yearly mean groups, which reinforce the earlier ANOVA results that suggested limited year-to-year differences for these parameters. 
 
 
 
