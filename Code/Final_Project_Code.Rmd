@@ -1,0 +1,860 @@
+---
+title: "Trend Analysis of Water Quality Data in Biscayne Bay: Impacts of Summer Fertilizer Ordinance"
+subtitle: https://github.com/jzwu01/Wu_Heinlein_RidolfiStarr
+author: "Dashiell Ridolfi-Starr & Joy Wu & Jordan Heinlein"
+date: "Fall 2025"
+ 
+output:
+  bookdown::html_document2:
+    toc: TRUE
+    fig_caption: yes
+    lof: true
+mainfont: Times New Roman
+editor_options: 
+  chunk_output_type: console
+---
+
+```{=tex}
+\newpage
+\tableofcontents 
+\newpage
+```
+## List of Tables
+
+*Dataset Information*
+
+* Table \@ref(tab:table1): Parameter Summary Statistics
+
+*Analysis*
+
+* Table \@ref(tab:SMK): Results Summary of SMK on Pre- and Post-Ordinance Monthly Averages
+* Table \@ref(tab:anova): Results Summary of ANOVA on Yearly Averages
+* Table \@ref(tab:Tukey): Results Summary of Tukey's HSD on Yearly Averages
+
+## List of Figures
+
+*Dataset Information*
+
+* Figure \@ref(fig:points): Water Quality Parameter Readings
+
+*Exploratory Analysis*
+
+* Figure \@ref(fig:previewplots): Monthly Averages of Water Quality Parameters
+* Figure \@ref(fig:boxplots): Distributions of Water Quality Parameter Values by Year
+
+*Analysis*
+
+* Figure \@ref(fig:prevspostTS): Comparing Pre- and Post-Ordinance Trends in Water Quality Parameters
+* Figure \@ref(fig:yearlyTS): Parameter Yearly Averages
+* Figure \@ref(fig:Pyearlyvsmonthly): Comparing Yearly Averages with Interpolated Monthly Averages: Phosphorous
+* Figure \@ref(fig:Nyearlyvsmonthly): Comparing Yearly Averages with Interpolated Monthly Averages: Nitrogen
+* Figure \@ref(fig:Oyearlyvsmonthly): Comparing Yearly Averages with Interpolated Monthly Averages: Dissolved Oxygen
+* Figure \@ref(fig:pHyearlyvsmonthly): Comparing Yearly Averages with Interpolated Monthly Averages: pH
+
+    ```{=tex}
+    \listoftables 
+    \newpage
+    \listoffigures 
+    \newpage
+    ```
+
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+# Load packages
+library(tidyverse) 
+library(here) 
+library(cowplot)
+library(lubridate) 
+library(zoo)
+library(trend)
+library(sf)
+library(mapview); mapviewOptions(fgb = FALSE) 
+library(cowplot)
+library(agricolae)
+library(knitr)
+
+# Set working directory
+#here()
+# Set ggplot theme
+mytheme <- theme_classic(base_size = 11) +
+  theme(axis.text = element_text(color = "black"),
+        plot.background = element_rect(fill = "white", color = NA),
+        legend.position = "right")
+theme_set(mytheme)
+
+# Load datasets
+WQ_data_raw <- read.csv(here("./Raw_Data/WQ_data.txt"), header = TRUE, sep = "|",
+                        colClasses = c("ProgramLocationID"="factor",
+                                       "Year"="factor",
+                                       "Month"="factor",
+                                       "ParameterName"="factor"))
+
+```
+
+# Rationale and Research Questions
+
+---
+
+\newpage
+
+# Dataset Information
+
+## Raw Data
+
+```{r wrangling, echo=FALSE, message=FALSE, warning=FALSE}
+#wrangling
+
+#Insert underscores into parameter names
+levels(WQ_data_raw$ParameterName) <- c("Dissolved_O2", "NO2_NO3_Filtered", "pH", 
+                                    "Salinity", "Specific_Conductivity", 
+                                    "Total_Kjeldahl_Nitrogen", "Total_Nitrogen",
+                                    "Total_Phosphorous", "Turbidity", 
+                                    "Water_Temperature")
+
+#pivot parameteres
+WQ_parameters_raw <- WQ_data_raw %>%
+  #select  columns of interest
+  select(SampleDate, ParameterName, ResultValue, Year, Month, ProgramLocationID,
+         OriginalLatitude, OriginalLongitude) %>%
+  group_by(SampleDate, Year, Month, ProgramLocationID, OriginalLatitude,
+           OriginalLongitude, ParameterName) %>%
+  summarise(
+    mean_ResultValue = mean(ResultValue)) %>%
+  #move parameters of interest into their own columns
+  pivot_wider(names_from = ParameterName, values_from = mean_ResultValue) %>%
+  mutate(SampleDate = ymd_hms(SampleDate),
+         Group = ifelse(SampleDate < as.Date("2021-04-1"), "Pre", "Post"))
+
+#remove outliers from dissolved O2 and pH
+WQ_parameters_treated <- WQ_parameters_raw  %>%
+  mutate(
+    pH = ifelse(pH>15,NA,pH),
+    Dissolved_O2 = ifelse(Dissolved_O2>700,NA,Dissolved_O2))
+
+#monthly averages data frame (for time series)
+WQ_monthly_data <- WQ_parameters_treated %>%
+  group_by(Year, Month, Group) %>%
+  summarise(
+    Mean_Phosphorous = mean(Total_Phosphorous, na.rm=TRUE),
+    Mean_pH = mean(pH, na.rm=TRUE),
+    Mean_Dissolved_O2 = mean(Dissolved_O2, na.rm=TRUE),
+    Mean_Total_N = mean(Total_Nitrogen, na.rm=TRUE)) %>%
+  mutate_all(~ifelse(is.nan(.),NA,.)) %>%
+  mutate(Date = ym(paste0(Year,"-",Month)))
+  
+
+#Find missing observations (needed for interpolation)
+dates_by_month <- as.data.frame(seq.Date(from=as.Date("2016/08/01"),
+                                      to=as.Date("2024/12/01"),
+                                      by="month"))
+colnames(dates_by_month) <- "Date"
+WQ_monthly_complete <- left_join(dates_by_month, WQ_monthly_data)
+
+
+#interpolate monthly data
+WQ_monthly_complete <- WQ_monthly_complete %>%
+  select(
+    Date, Month, Mean_Phosphorous, Mean_Total_N, Mean_Dissolved_O2, Mean_pH) %>%
+  mutate(
+    Year = as.factor(year(Date)),
+    Interp_Phosphorous = na.approx(Mean_Phosphorous),
+    Interp_pH = na.approx(Mean_pH),
+    Interp_Dissolved_O2 = na.approx(Mean_Dissolved_O2),
+    Interp_Total_N = na.approx(Mean_Total_N),
+    Group = ifelse(Date < as.Date("2021-04-01"), "Pre", "Post"))
+
+
+#yearly numbers
+yearly_averages <- WQ_parameters_treated %>%
+  group_by(Year, Group) %>%
+  summarise(
+    Mean_Phosphorous = mean(Total_Phosphorous, na.rm=TRUE),
+    Mean_pH = mean(pH, na.rm=TRUE),
+    Mean_Dissolved_O2 = mean(Dissolved_O2, na.rm=TRUE),
+    Mean_Total_N = mean(Total_Nitrogen, na.rm=TRUE)) %>%
+  mutate(Date = ym(paste0(Year,"-","01")))
+
+yearly_averages_bysite <- WQ_parameters_treated %>%
+  group_by(Year, ProgramLocationID, OriginalLatitude, OriginalLongitude) %>%
+  summarise(
+    Mean_Phosphorous = mean(Total_Phosphorous, na.rm=TRUE),
+    Mean_pH = mean(pH, na.rm=TRUE),
+    Mean_Dissolved_O2 = mean(Dissolved_O2, na.rm=TRUE),
+    Mean_Total_N = mean(Total_Nitrogen, na.rm=TRUE)) %>%
+  mutate(Date = ym(paste0(Year,"-","01")))
+
+
+#split data into pre- and post-ordinance data frames
+pre_ordinance_monthly <- WQ_monthly_complete %>%
+  filter(Group == "Pre")
+  
+post_ordinance_monthly <- WQ_monthly_complete %>%
+  filter(Group == "Post")
+
+pre_ordinance_yearly <- yearly_averages %>%
+  filter(Group == "Pre")
+
+post_ordinance_yearly <- yearly_averages %>%
+  filter(Group == "Post")
+
+
+#parameter summary table
+Minima <- c(
+  min(WQ_parameters_treated$Total_Phosphorous, na.rm=TRUE),
+  min(WQ_parameters_treated$Total_Nitrogen, na.rm=TRUE),
+  min(WQ_parameters_treated$Dissolved_O2, na.rm=TRUE),
+  min(WQ_parameters_treated$pH, na.rm=TRUE))
+
+Maxima <- c(
+  max(WQ_parameters_treated$Total_Phosphorous, na.rm=TRUE),
+  max(WQ_parameters_treated$Total_Nitrogen, na.rm=TRUE),
+  max(WQ_parameters_treated$Dissolved_O2, na.rm=TRUE),
+  max(WQ_parameters_treated$pH, na.rm=TRUE))
+
+Means <- c(
+  mean(WQ_parameters_treated$Total_Phosphorous, na.rm=TRUE),
+  mean(WQ_parameters_treated$Total_Nitrogen, na.rm=TRUE),
+  mean(WQ_parameters_treated$Dissolved_O2, na.rm=TRUE),
+  mean(WQ_parameters_treated$pH, na.rm=TRUE))
+
+SDs <- c(
+  sd(WQ_parameters_treated$Total_Phosphorous, na.rm=TRUE),
+  sd(WQ_parameters_treated$Total_Nitrogen, na.rm=TRUE),
+  sd(WQ_parameters_treated$Dissolved_O2, na.rm=TRUE),
+  sd(WQ_parameters_treated$pH, na.rm=TRUE))
+
+parameter.summary <- data.frame(
+  "Parameter" = c("Total Phosphorous", "Total Nitrogen", "Dissolved Oxygen", "pH"),
+  "Units" = c("mg/L", "mg/L", "mg/L", "NA"),
+  "Minimum" = Minima,
+  "Maximum" = Maxima,
+  "Mean" = Means,
+  "Std_Deviation" = SDs)
+
+P.points <- ggplot() +
+  geom_point(data=WQ_parameters_raw, aes(x=SampleDate, y=Total_Phosphorous))+
+  labs(
+    x= "Date",
+    y="Total Phosphorous (mg/L)")
+N.points <- ggplot() +
+  geom_point(data=WQ_parameters_raw, aes(x=SampleDate, y=Total_Nitrogen))+
+  labs(
+    x="Date",
+    y="Total Nitrogen (mg/L)")
+O.points <- ggplot() +
+  geom_point(data=WQ_parameters_raw, aes(x=SampleDate, y=Dissolved_O2))+
+  labs(
+    y="Dissolved Oxygen (mg/L)",
+    x="Date")
+pH.points <- ggplot() +
+  geom_point(data=WQ_parameters_raw, aes(x=SampleDate, y=pH))+
+  labs(
+    y="pH",
+    x="Date")
+
+points.preview <- plot_grid(P.points, N.points, O.points, pH.points, nrow=2, ncol=2)
+```
+
+```{r data structure, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Water Quality Parameter Readings"}
+#displaying data
+
+#raw data structure
+str(WQ_data_raw)
+```
+
+## Data Wrangling
+
+```{r points, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Water Quality Parameter Readings"}
+#show points 
+print(points.preview)
+```
+
+```{r table1, echo=FALSE, message=FALSE, warning=FALSE}
+#parameter summary
+kable(
+  parameter.summary,
+  align = c("l","c","r","r","r","r"),
+  digits = c(1,1,4,4,3,3),
+  caption = "Parameter Summary Statistics")
+```
+
+---
+
+\newpage
+
+# Exploratory Analysis
+
+## Geographic Context
+
+```{r map, echo=FALSE, message=FALSE, warning=FALSE, label="map", fig.cap="Locations of Water Quality Sampling Sites"}
+#Creating simple features data frame for spatial visualization 
+SampleLocations_sf <- WQ_data_raw %>%
+  distinct(ProgramLocationID,OriginalLongitude, OriginalLatitude, .keep_all = FALSE) %>%
+  st_as_sf(
+    coords = c("OriginalLongitude", "OriginalLatitude"),
+    crs= 4326)
+
+#Visualization of sample collection locations 
+mapviewOptions(basemaps = "Esri.WorldImagery")
+
+mapview(
+  SampleLocations_sf,
+  layer.name= "Sample Locations",
+  legend= FALSE,
+  col.regions="blue",
+  col="yellow",
+  alpa.regions= 0.5
+  )
+```
+
+## Monthly Averages
+
+```{r previewplots, echo=FALSE, message=FALSE, warning=FALSE, fig.height=10, fig.cap="Monthly Averages of Water Quality Parameters"}
+#Exploring series
+
+phosphorous.preview <- ggplot(WQ_monthly_complete,
+  aes(x=Date, y=Mean_Phosphorous)) +
+  geom_line() +
+  geom_smooth(method="lm", se=FALSE)+
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  labs(
+    y="Total Phosphorous (mg/L)",
+    x="")
+
+nitrogen.preview <- ggplot(WQ_monthly_complete,
+  aes(x=Date, y=Mean_Total_N)) +
+  geom_line() +
+  geom_smooth(method="lm", se=FALSE)+
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  labs(
+    y="Total Nitrogen (mg/L)",
+    x="")
+
+oxygen.preview <- ggplot(WQ_monthly_complete,
+  aes(x=Date, y=Mean_Dissolved_O2)) +
+  geom_line() +
+  geom_smooth(method="lm", se=FALSE)+
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  labs(
+    y="Dissolved Oxygen (mg/L)",
+    x="")
+
+pH.preview <- ggplot(WQ_monthly_complete,
+  aes(x=Date, y=Mean_pH)) +
+  geom_line() +
+  geom_smooth(method="lm", se=FALSE)+
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  labs(
+    y="pH",
+    x="Date")
+
+plot_grid(phosphorous.preview, nitrogen.preview, oxygen.preview, pH.preview, nrow=4, align='v')
+
+```
+
+## Yearly Distributions
+
+```{r boxplots, echo=FALSE, message=FALSE, warning=FALSE, fig.height=9, fig.cap="Distributions of Water Quality Parameter Values by Year"}
+
+Total_Nitrogen_Distribution <- ggplot(WQ_monthly_complete,
+            aes(x=Year,y=Mean_Total_N)
+            )+
+  geom_boxplot(na.rm= TRUE)+
+  xlab("Year")+
+  ylab("Total Nitrogen (mg/L)")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_blank())+
+  theme(axis.ticks.x = element_blank())
+
+Total_Phosphorous_Distribution <- ggplot(WQ_monthly_complete,
+            aes(x=as.factor(Year),y=Mean_Phosphorous)
+            )+
+  geom_boxplot(na.rm = TRUE)+
+  xlab("Year")+
+  ylab("TotalPhosphorous (mg/L)")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_blank())+
+  theme(axis.ticks.x = element_blank())
+
+
+Dissolved_O2_Distribution <- ggplot(WQ_monthly_complete,
+            aes(x=as.factor(Year),y=Mean_Dissolved_O2)
+            )+
+  geom_boxplot(na.rm = TRUE)+
+  xlab("Year")+
+  ylab("Dissolved O2 (mg/L)")+
+  theme(axis.title.x = element_blank())+
+  theme(axis.text.x = element_blank())+
+  theme(axis.ticks.x = element_blank())
+
+
+pH_distribution <- ggplot(WQ_monthly_complete,
+            aes(x=as.factor(Year),y=Mean_pH)
+            )+
+  geom_boxplot(na.rm = TRUE)+
+  xlab("Year")+
+  ylab("pH")
+
+
+CombinedDistributionPlot <- plot_grid(
+  Total_Phosphorous_Distribution,
+  Total_Nitrogen_Distribution,
+  Dissolved_O2_Distribution,
+  pH_distribution,
+  ncol=1,
+  align = "v"
+)
+
+print(CombinedDistributionPlot)
+```
+
+---
+
+\newpage
+
+# Analysis
+
+## Question 1: How do the pre- and post-ordinance trends in monthly averages compare in terms of A) Total Phosphorous, B) Total Nitrogen, C) Dissolved Oxygen, and D) pH?
+
+### Pre- vs. Post-Ordinance Monthly Trend Analysis
+
+```{r prevspostTS, echo=FALSE, message=FALSE, warning=FALSE, fig.height=11, fig.cap="Comparing Pre- and Post-Ordinance Trends in Water Quality Parameters"}
+#time series
+
+#P overall monthly ts
+monthly.P.ts <- ts(WQ_monthly_complete$Interp_Phosphorous, start=c(2016,8), 
+                   frequency=12)
+monthly.P.decomp <- stl(monthly.P.ts, s.window="periodic")
+monthly.P.components <- as.data.frame(monthly.P.decomp$time.series[,1:3])
+monthly.P.components <- mutate(monthly.P.components,
+                               observed = WQ_monthly_complete$Interp_Phosphorous,
+                               date = WQ_monthly_complete$Date)
+
+#N overall monthly ts
+monthly.N.ts <- ts(WQ_monthly_complete$Interp_Total_N, start=c(2016,8), 
+                   frequency=12)
+monthly.N.decomp <- stl(monthly.N.ts, s.window="periodic")
+monthly.N.components <- as.data.frame(monthly.N.decomp$time.series[,1:3])
+monthly.N.components <- mutate(monthly.N.components,
+                               observed = WQ_monthly_complete$Interp_Total_N,
+                               date = WQ_monthly_complete$Date)
+
+
+#O2 overall monthly ts
+monthly.O.ts <- ts(WQ_monthly_complete$Interp_Dissolved_O2, start=c(2016,8),
+                   frequency=12)
+monthly.O.decomp <- stl(monthly.O.ts, s.window="periodic")
+monthly.O.components <- as.data.frame(monthly.O.decomp$time.series[,1:3])
+monthly.O.components <- mutate(monthly.O.components,
+                               observed = WQ_monthly_complete$Interp_Dissolved_O2,
+                               date = WQ_monthly_complete$Date)
+
+#pH overall monthly ts
+monthly.pH.ts <- ts(WQ_monthly_complete$Interp_pH, start=c(2016,8),
+                   frequency=12)
+monthly.pH.decomp <- stl(monthly.pH.ts, s.window="periodic")
+monthly.pH.components <- as.data.frame(monthly.pH.decomp$time.series[,1:3])
+monthly.pH.components <- mutate(monthly.pH.components,
+                               observed = WQ_monthly_complete$Interp_pH,
+                               date = WQ_monthly_complete$Date)
+
+
+
+#P pre vs. post monthly trend analysis
+P.pre.ts <- ts(pre_ordinance_monthly$Interp_Phosphorous, start = c(2016,8),
+               frequency=12)
+P.pre.decomp <- stl(P.pre.ts, s.window="periodic") 
+P.pre.components <- as.data.frame(P.pre.decomp$time.series[,1:3])
+P.pre.components <- mutate(P.pre.components,
+                            observed = pre_ordinance_monthly$Interp_Phosphorous,
+                            date = pre_ordinance_monthly$Date)
+P.pre.smk <- smk.test(P.pre.ts) #no significant trend
+
+
+P.post.ts <- ts(post_ordinance_monthly$Interp_Phosphorous, start = c(2021,4),
+                frequency=12)
+P.post.decomp <- stl(P.post.ts, s.window = "periodic")
+P.post.components <- as.data.frame(P.post.decomp$time.series[,1:3])
+P.post.components <- mutate(P.post.components,
+                            observed = post_ordinance_monthly$Interp_Phosphorous,
+                            date = post_ordinance_monthly$Date)
+P.post.smk <- smk.test(P.post.ts) #significant trend! 
+
+#P pre vs post plot
+P.prevspost.plot <- ggplot() +
+  geom_line(data=WQ_monthly_complete, aes(x=Date, y=Interp_Phosphorous)) +
+  geom_line(data=P.pre.components, aes(x=date, y=trend), color="#005AB5") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2018-10-01"), y=0.02,
+            label=paste0("SMK p-value = ", round(P.pre.smk$p.value, 3)), 
+            color="#005AB5") +
+  geom_line(data=P.post.components, aes(x=date, y=observed)) +
+  geom_line(data=P.post.components, aes(x=date, y=trend), color="#DC3220") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2023-05-01"), y=0.04,
+            label=paste0("SMK p-value = ", round(P.post.smk$p.value, 3), "*"),
+            color="#DC3220") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty=2) +
+  labs(
+    y="Total Phosphorous (mg/L)",
+    x="")
+
+#N pre vs. post trend analysis
+N.pre.ts <- ts(pre_ordinance_monthly$Interp_Total_N, start = c(2016,8),
+               frequency=12)
+N.pre.decomp <- stl(N.pre.ts, s.window="periodic") 
+N.pre.components <- as.data.frame(N.pre.decomp$time.series[,1:3])
+N.pre.components <- mutate(N.pre.components,
+                            observed = pre_ordinance_monthly$Interp_Total_N,
+                            date = pre_ordinance_monthly$Date)
+N.pre.smk <- smk.test(N.pre.ts) 
+
+
+N.post.ts <- ts(post_ordinance_monthly$Interp_Total_N, start = c(2021,4),
+                frequency=12)
+N.post.decomp <- stl(N.post.ts, s.window = "periodic")
+N.post.components <- as.data.frame(N.post.decomp$time.series[,1:3])
+N.post.components <- mutate(N.post.components,
+                            observed = post_ordinance_monthly$Interp_Total_N,
+                            date = post_ordinance_monthly$Date)
+N.post.smk <- smk.test(N.post.ts)
+
+#N pre vs post plot
+N.prevspost.plot <- ggplot() +
+  geom_line(data=WQ_monthly_complete, aes(x=Date, y=Interp_Total_N)) +
+  geom_line(data=N.pre.components, aes(x=date, y=trend), color="#005AB5") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2018-10-01"), y=0.8,
+            label=paste0("SMK p-value = ", round(N.pre.smk$p.value, 3)), 
+            color="#005AB5") +
+  geom_line(data=N.post.components, aes(x=date, y=observed)) +
+  geom_line(data=N.post.components, aes(x=date, y=trend), color="#DC3220") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2023-01-01"), y=0.8,
+            label=paste0("SMK p-value = ", round(N.post.smk$p.value, 3)),
+            color="#DC3220") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty=2) +
+  labs(
+    y="Total Nitrogen (mg/L)",
+    x="")
+
+#O2 pre vs. post trend analysis
+O.pre.ts <- ts(pre_ordinance_monthly$Interp_Dissolved_O2, start = c(2016,8),
+               frequency=12)
+O.pre.decomp <- stl(O.pre.ts, s.window="periodic") 
+O.pre.components <- as.data.frame(O.pre.decomp$time.series[,1:3])
+O.pre.components <- mutate(O.pre.components,
+                            observed = pre_ordinance_monthly$Interp_Dissolved_O2,
+                            date = pre_ordinance_monthly$Date)
+O.pre.smk <- smk.test(O.pre.ts) 
+
+
+O.post.ts <- ts(post_ordinance_monthly$Interp_Dissolved_O2, start = c(2021,4),
+                frequency=12)
+O.post.decomp <- stl(O.post.ts, s.window = "periodic")
+O.post.components <- as.data.frame(O.post.decomp$time.series[,1:3])
+O.post.components <- mutate(O.post.components,
+                            observed = post_ordinance_monthly$Interp_Dissolved_O2,
+                            date = post_ordinance_monthly$Date)
+O.post.smk <- smk.test(O.post.ts)
+
+#O2 pre vs post plot
+O.prevspost.plot <- ggplot() +
+  geom_line(data=WQ_monthly_complete, aes(x=Date, y=Interp_Dissolved_O2)) +
+  geom_line(data=O.pre.components, aes(x=date, y=trend), color="#005AB5") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2019-09-01"), y=45,
+            label=paste0("SMK p-value = ",round(O.pre.smk$p.value, 3)), 
+            color="#005AB5") +
+  geom_line(data=O.post.components, aes(x=date, y=observed)) +
+  geom_line(data=O.post.components, aes(x=date, y=trend), color="#DC3220") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2023-05-01"), y=45,
+            label=paste0("SMK p-value = ", round(O.post.smk$p.value, 3)),
+            color="#DC3220") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty=2) +
+  labs(
+    y="Dissolved Oxygen (mg/L)",
+    x="")
+
+#pH pre vs. post trend analysis
+pH.pre.ts <- ts(pre_ordinance_monthly$Interp_pH, start = c(2016,8),
+               frequency=12)
+pH.pre.decomp <- stl(pH.pre.ts, s.window="periodic") 
+pH.pre.components <- as.data.frame(pH.pre.decomp$time.series[,1:3])
+pH.pre.components <- mutate(pH.pre.components,
+                            observed = pre_ordinance_monthly$Interp_pH,
+                            date = pre_ordinance_monthly$Date)
+pH.pre.smk <- smk.test(pH.pre.ts) 
+
+
+pH.post.ts <- ts(post_ordinance_monthly$Interp_pH, start = c(2021,4),
+                frequency=12)
+pH.post.decomp <- stl(pH.post.ts, s.window = "periodic")
+pH.post.components <- as.data.frame(pH.post.decomp$time.series[,1:3])
+pH.post.components <- mutate(pH.post.components,
+                            observed = post_ordinance_monthly$Interp_pH,
+                            date = post_ordinance_monthly$Date)
+pH.post.smk <- smk.test(pH.post.ts)
+
+#pH pre vs post plot
+pH.prevspost.plot <- ggplot() +
+  geom_line(data=WQ_monthly_complete, aes(x=Date, y=Interp_pH)) +
+  geom_line(data=pH.pre.components, aes(x=date, y=trend), color="#005AB5") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2019-03-01"), y=8.75,
+            label=paste0("SMK p-value = ",round(pH.pre.smk$p.value, 3)), 
+            color="#005AB5") +
+  geom_line(data=pH.post.components, aes(x=date, y=observed)) +
+  geom_line(data=pH.post.components, aes(x=date, y=trend), color="#DC3220") +
+  geom_text(data=WQ_monthly_complete,
+            x=as.Date("2023-05-01"), y=9.5,
+            label=paste0("SMK p-value = ", round(pH.post.smk$p.value, 4),"*"),
+            color="#DC3220") +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty=2) +
+  ylim(6.5,10) +
+  labs(
+    y="pH")
+
+#combined pre vs post trend analysis plot
+plot_grid(P.prevspost.plot, N.prevspost.plot, O.prevspost.plot, pH.prevspost.plot,
+          nrow=4)
+```
+
+```{r SMK, echo=FALSE, message=FALSE, warning=FALSE}
+#pre vs post SMK results summary table
+pre.stat.summary <- c(P.pre.smk$statistic, N.pre.smk$statistic, 
+                   O.pre.smk$statistic, pH.pre.smk$statistic)
+pre.pvalue.summary <- c(P.pre.smk$p.value, N.pre.smk$p.value,
+                        O.pre.smk$p.value, pH.pre.smk$p.value)
+post.stat.summary <- c(P.post.smk$statistic, N.post.smk$statistic,
+                       O.post.smk$statistic, pH.post.smk$statistic)
+post.pvalue.summary <- c(P.post.smk$p.value, N.post.smk$p.value,
+                        O.post.smk$p.value, pH.post.smk$p.value)
+
+prevspost.SMK.summary <- data.frame(
+  "Pre-Ordinance_Z.Stat" = pre.stat.summary,
+  "Pre-Ordinance_p-value" = pre.pvalue.summary,
+  "Post-Ordinance_Z.Stat" = post.stat.summary,
+  "Post-Ordinance_p-value" = post.pvalue.summary,
+  row.names = c("Total_Phosphorous", "Total_Nitrogen", "Dissolved_Oxygen", "pH"))
+
+#smk summary table
+kable(prevspost.SMK.summary, 
+      digits=c(3,3,3,3),
+      caption="Results Summary of SMK on Pre- and Post-Ordinance Monthly Averages")
+```
+
+### Comparison of Monthly and Yearly Trends
+
+```{r yearlyTS, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Parameter Yearly Averages"}
+#yearly TS with combined plots
+par(mfrow = c(2,2))
+yearly.P.ts <- ts(yearly_averages$Mean_Phosphorous, 
+                  start = 2016,
+                  frequency = 1)
+plot(yearly.P.ts,
+    xlab = "Year",
+    ylab = "Phosphorous (mg/L)")
+
+yearly.N.ts <- ts(yearly_averages$Mean_Total_N, 
+                  start = 2016,
+                  frequency = 1)
+plot(yearly.N.ts,
+     xlab = "Year",
+     ylab = "Nitrogen (mg/L)")
+
+yearly.O.ts <- ts(yearly_averages$Mean_Dissolved_O2, 
+                  start = 2016,
+                  frequency = 1)
+plot(yearly.O.ts,
+      xlab = "Year",
+     ylab = "Dissolved Oxygen (mg/L)")
+
+yearly.pH.ts <- ts(yearly_averages$Mean_pH, 
+                  start = 2016,
+                  frequency = 1)
+plot(yearly.pH.ts,
+     xlab = "Year",
+     ylab = "pH")
+par(mfrow = c(1,1))
+```
+
+```{r Pyearlyvsmonthly, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Comparing Yearly Averages with Interpolated Monthly Averages: Total Phosphorous"}
+#comparison of monthly interpolated TS & yearly non-interpolated TS
+#Phosphorous
+P.yearly.plot <- ggplot() +
+  geom_line(data=yearly_averages, aes(x=Date, y=Mean_Phosphorous)) +
+  geom_line() +
+  geom_point() +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  xlim(as.Date("2016-08-01"),as.Date("2024-12-01")) +
+  #scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    x = "Year",
+    y = "Phosphorous (mg/L)",
+    title = "Yearly Mean Total Phosphorous")
+  
+plot_grid(P.prevspost.plot, P.yearly.plot,
+          nrow=2,
+          align = "v")
+```
+
+```{r Nyearlyvsmonthly, echo=FALSE, fig.cap="Comparing Yearly Averages with Interpolated Monthly Averages: Total Nitrogen", message=FALSE, warning=FALSE}
+#Nitrogen
+N.yearly.plot <- ggplot() +
+  geom_line(data=yearly_averages, aes(x=Date, y=Mean_Total_N)) +
+  geom_line() +
+  geom_point() +
+  xlim(as.Date("2016-08-01"),as.Date("2024-12-01")) +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  #scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    x = "Year",
+    y = "Nitrogen (mg/L)",
+    title = "Yearly Mean Total Nitrogen")
+
+
+plot_grid(N.prevspost.plot, N.yearly.plot,
+          nrow=2,
+          align = "v")
+```
+
+```{r Oyearlyvsmonthly, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Comparing Yearly Averages with Interpolated Monthly Averages: Dissolved Oxygen"}
+O.yearly.plot <- ggplot() +
+  geom_line(data=yearly_averages, aes(x=Date, y=Mean_Dissolved_O2)) +
+  geom_line() +
+  geom_point() +
+  xlim(as.Date("2016-08-01"),as.Date("2024-12-01")) +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  #scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    x = "Year",
+    y = "Dissolved Oxygen (mg/L)",
+    title = "Yearly Mean Total Dissolved Oxygen")
+
+
+plot_grid(O.prevspost.plot, O.yearly.plot,
+          nrow=2,
+          align = "v")
+```
+
+```{r pHyearlyvsmonthly, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Comparing Yearly Averages with Interpolated Monthly Averages: pH"}
+pH.yearly.plot <- ggplot() +
+  geom_line(data=yearly_averages, aes(x=Date, y=Mean_pH)) +
+  geom_line() +
+  geom_point() +
+  xlim(as.Date("2016-08-01"),as.Date("2024-12-01")) +
+  geom_vline(xintercept = as.Date("2021-04-01"), lty = 2) +
+  #scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    x = "Year",
+    y = "pH",
+    title = "Yearly Mean pH")
+
+
+plot_grid(pH.prevspost.plot, pH.yearly.plot,
+          nrow=2,
+          align = "v")
+```
+
+## Question 2: Are there significant differences among the yearly averages for A) Total Phosphorous, B) Total Nitrogen, C) Dissolved Oxygen, and D) pH?
+
+### ANOVA on Yearly Means
+
+```{r anova, echo=FALSE, message=FALSE, warning=FALSE}
+#ANOVA
+yearly.P.anova <- aov(data=WQ_monthly_complete, Mean_Phosphorous ~ Year)
+#TukeyHSD(yearly.P.anova)
+P.HSD <- HSD.test(yearly.P.anova, "Year", group=TRUE)
+
+yearly.N.anova <- aov(data=WQ_monthly_complete, Mean_Total_N ~ Year)
+#TukeyHSD(yearly.N.anova)
+N.HSD <- HSD.test(yearly.N.anova, "Year", group=TRUE)
+
+yearly.O.anova <- aov(data=WQ_monthly_complete, Mean_Dissolved_O2 ~ Year)
+#TukeyHSD(yearly.O.anova)
+O.HSD <- HSD.test(yearly.O.anova, "Year", group=TRUE)
+
+yearly.pH.anova <- aov(data=WQ_monthly_complete, Mean_pH ~ Year)
+#TukeyHSD(yearly.pH.anova)
+pH.HSD <- HSD.test(yearly.pH.anova, "Year", group=TRUE)
+
+#anova results table
+P.anova.results <- summary(yearly.P.anova)[[1]]
+N.anova.results <- summary(yearly.N.anova)[[1]]
+O.anova.results <- summary(yearly.O.anova)[[1]]
+pH.anova.results <- summary(yearly.pH.anova)[[1]]
+
+anova.results <- bind_rows(
+  P.anova.results,
+  N.anova.results,
+  O.anova.results,
+  pH.anova.results)
+
+anova.results <- anova.results %>%
+  mutate(Parameter = c(
+    "Total_Phosphorous", "Total_Phosphorous", "Total_Nitrogen", "Total_Nitrogen",
+    "Dissolved_O2", "Dissolved_O2", "pH", "pH")) %>%
+  select(Parameter, Df, `Sum Sq`, `Mean Sq`, `F value`, `Pr(>F)`)
+ 
+kable(anova.results,
+      row.names = T,
+      digits = c(1,1,3,3,3,5),
+      caption="Results Summary of ANOVA on Yearly Averages")
+```
+
+### Tukey's HSD 
+
+```{r Tukey, echo=FALSE, message=FALSE, warning=FALSE}
+#HSD results into table
+P.groups <- as.data.frame(P.HSD$groups)
+P.groups <- P.groups[order(rownames(P.groups)),]
+N.groups <- as.data.frame(N.HSD$groups)
+N.groups <- N.groups[order(rownames(N.groups)),]
+O.groups <- as.data.frame(O.HSD$groups)
+O.groups <- O.groups[order(rownames(O.groups)),]
+#pH.groups <- as.data.frame(pH.HSD$groups)
+#pH.groups <- pH.groups[order(rownames(pH.groups)),]
+
+parameter.anova.groups <- data.frame(
+  "Phosphorous" = P.groups,
+  "Nitrogen" = N.groups,
+  "Dissolved_O2"= O.groups)
+  #"pH" = pH.groups)
+
+kable(parameter.anova.groups,
+      col.names=c("Year",
+                  "Phosphorous_Mean","P_Group",
+                  "Nitrogen_Mean","N_Group",
+                  "Diss_O2_Mean","O2_Group"),
+                  #"pH_Mean","pH_Group"),
+            align=c("r","c","r","c","r","c","r","c"),
+      digits=c(3,1,3,1,3,1,3),
+      caption="Results Summary of Tukey's HSD on Yearly Averages")
+```
+
+---
+
+\newpage
+
+# Summary and Conclusions
+
+## Total Phosphorous
+
+## Total Nitrogen
+
+## Dissolved Oxygen
+
+## pH
+
+## Conclusion
+
+----
+
+\newpage
+
+# References
