@@ -100,6 +100,8 @@ Urban coastal ecosystems are sensitive to stormwater runoff, which is rain water
 
 This study examines whether measurable changes in nutrient concentrations or related indicators appeared following the implementation of the Miami-Dade County fertilizer ordinance by using data from the City of Miami Beach Water Monitoring Program. The goal is to quantify these changes through time series and statistical analyses. We chose to look at this specific dataset because it includes measurements for multiple years, and it is specific to the location that we are looking to assess. It also measures parameters that are crucial to our analyses: total nitrogen, total phosphorus, dissolved oxygen, and pH. We chose to examine dissolved oxygen because it is indirectly related to dissolved phosphorous and nitrogen levels. Under increased phosphorous and nitrogen loads, aquatic ecosystems can undergo eutrophication and be depleted of oxygen.
 
+Based on the background research and context, our hypothesis is that total phosphorous and total nitrogen are likely to decrease, dissovled oxygen are likely to increase, and pH are likely to stay the same.
+
 ---
 
 \newpage
