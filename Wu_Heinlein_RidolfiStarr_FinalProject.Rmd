@@ -901,7 +901,7 @@ With the exception of the anomalous dissolved oxygen average, these results sugg
 # Summary and Conclusions
 
 ## Total Phosphorous
-
+Our results provide strong evidence that total phosphorous levels in Biscayne Bay fell significantly after the summer fertilizer ordinance. While there is no trend over time in the pre-ordinance data, a strong downward trend emerges in the post-ordinance data. Significantly lower yearly means also emerge after the ordinance. This suggests that implementation of the ordinance led to a measurable decrease in dissolved phosphorous concentrations in Biscayne Bay.
 \
 \
 
@@ -911,16 +911,21 @@ With the exception of the anomalous dissolved oxygen average, these results sugg
 \
 
 ## Dissolved Oxygen
-
+Although we found notable changes in phosphorous levels and signs of change in nitrogen levels, which are indirectly related to dissolved oxygen (DO) levels through eutrophication, our data show no evidence of changes in DO. Time series showed no significant monotonic trend before or after the ordinance, and ANOVA found no significantly different yearly means. According to the University of Florida Institute of Food and Agricultural Sciences, DO levels of 5 mg/L and above support healthy marine life. The monthly DO averages in this study hovered steadily around this value, with variability above and below. 
 \
 \
 
 ## pH
-
+Our data produced mixed results that may suggest a decline in pH after the ordinance was implemented. The post-ordinance downward trend over time was statically significant, but this was the only such result; ANOVA found no significantly different means. Interestingly, interpolation of monthly averages produced a notable upward spike in pH after the ordinance, and the SMK still identified a downward trend. These results suggest a slight trend that may be too fine to appear in coarse, yearly averages. 
 \
 \
 
-## Overall
+## Conclusion
+Overall, this analysis was challenged by data availability. Missing observations from 2022 required interpolation of a large data gap. Analysis at the yearly level was too coarse to detect pre- and post-ordinance trends. Still, one strong trend emerged as phosphorous clearly began to decline after the ordinance.
+
+Other results paint an ambiguous picture of water quality following the fertilizer ordinance. Nitrogen levels and pH may have also started to decrease after the ordinance, having shown significance in one statistical test but not another. It is possible that these results were influenced by external factors like precipitation, so these findings should be confirmed by further analysis. Dissolved oxygen levels showed no signs of change. 
+
+Declining phosphorous and nitrogen levels represent a positive scenario for marine life, as excess dissolved nutrients can lead to eutrophication and other ecosystem disruptions. Falling pH is not strictly positive, as it mirrors a global trend of dangerous ocean acidification due to high atmospheric carbon dioxide levels. Our analysis suggests that the county ordinance may be having a positive impact on water quality, but also highlights the need for additional improvement measures and continued, consistent data collection. 
 
 \
 
@@ -931,3 +936,11 @@ With the exception of the anomalous dissolved oxygen average, these results sugg
 # References
 
 1.  City of Miami Beach. (2024). City of Miami Beach Water Monitoring. Updated 04/09/2025. Distributed by: SEACAR Data Discovery Interface, Office of Resilience and Coastal Protection, Florida Department of Environmental Protection. <https://data.florida-seacar.org/programs/details/4058>
+
+2.  Eutrophication: <https://www.usgs.gov/mission-areas/water-resources/science/nutrients-and-eutrophication>
+
+3.  Ocean acidification: <https://www.noaa.gov/education/resource-collections/ocean-coasts/ocean-acidification> 
+
+4.  On dissolved oxygen: <https://waterwatch.ifas.ufl.edu/media/waterwatchifasufledu/DO-Nutrients-double-sided.pdf> 
+
+5.  Ordinance (county): <https://library.municode.com/fl/miami_-_dade_county/codes/code_of_ordinances?nodeId=PTIIICOOR_CH18CMIDECOORFLIEFEUSURLA> 
