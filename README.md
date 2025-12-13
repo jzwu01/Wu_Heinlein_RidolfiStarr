@@ -9,7 +9,7 @@ The repository contains data downloaded from the Florida Statewide Ecosystem Ass
 
 ## Investigators
 
-Joy Wu, Dash Ridolfi-Starr, Jordan Heinlein
+Joy Wu, Dashiell Ridolfi-Starr, Jordan Heinlein
 
 ## Keywords
 
