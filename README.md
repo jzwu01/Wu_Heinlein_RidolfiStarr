@@ -1,45 +1,20 @@
----
-title: "Wu_Heinlein_RidolfiStarr Fall 2025 EDE Final Project"
-author: "Dashiell Ridolfi-Starr & Joy Wu & Jordan Heinlein"
-date: "Fall 2025"
- 
-output:
-  bookdown::html_document2:
-    toc: TRUE
-    fig_caption: yes
-    lof: true
-mainfont: Times New Roman
-editor_options: 
-  chunk_output_type: console
----
-
-# Wu_Heinlein_RidolfiStarr
-2025 Fall EDE Group Project
-
 # Wu_Heinlein_RidolfiStarr Fall 2025 EDE Final Project
 Fall 2025 EDE Final Project: Trend Analysis of Water Quality Data in Biscayne Bay: Impacts of Summer Fertilizer Ordinance
 
-<Instructions: copy and paste this template into your project README file (found in the parent folder of the repository). Fill in relevant information as requested.>
-
-<General notes: add as much information as is relevant for your repository. Some overarching guidelines are provided, but feel free to expand on these guidelines.>
-<More resources found here: https://www.dataone.org/all-best-practices>
-<Delete the text inside the brackets when formatting your file.>
 
 ## Summary
 
 The repository contains data downloaded from the Florida Statewide Ecosystem Assessment of Coastal and Aquatic Resources (SEACAR) Data Discovery platform, specifically from the city of Miami Beach Water Monitoring program page that provides data points on various water quality monitoring parameters. Trends in pre- and post-fertilizer ordinance implementation in various parameters (total phosphorus, total nitrogen, dissolved oxygen, and pH) are analyzed to asssess whether there are significant changes following the ordinance implementation.
 
-<describe the purpose of this repository, the information it contains, and any relevant analysis goals. What, why, where, when, how?>
 
 ## Investigators
 
 Joy Wu, Dash Ridolfi-Starr, Jordan Heinlein
-<name(s), affiliation(s), contact information, roles (if applicable)>
 
 ## Keywords
 
 Water Quality, Fertilizer, Nutrients, Fertilizer Ordinance, Biscayne Bay
-<add relevant keywords here>
+
 
 ## Database Information
 
