@@ -944,3 +944,5 @@ Declining phosphorous and nitrogen levels represent a positive scenario for mari
 4.  On dissolved oxygen: <https://waterwatch.ifas.ufl.edu/media/waterwatchifasufledu/DO-Nutrients-double-sided.pdf> 
 
 5.  Ordinance (county): <https://library.municode.com/fl/miami_-_dade_county/codes/code_of_ordinances?nodeId=PTIIICOOR_CH18CMIDECOORFLIEFEUSURLA> 
+6. 2019 Biscayne Bay Report Card. Miami-Dade County:  <https://documents.miamidade.gov/mayor/memos/12.10.20-Health-of-Biscayne-Bay%E2%80%93Report-Card-Program.pdf>
+7. 2025 Biscayne Bay Report Card. Miami-Dade County: <https://experience.arcgis.com/experience/02ea7212988b4d6c856279503d991e01>
